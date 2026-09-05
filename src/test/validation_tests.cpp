@@ -21,49 +21,74 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 
-static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
-{
-    int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
-
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
-    }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
-}
-
-static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
-{
-    Consensus::Params consensusParams;
-    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    TestBlockSubsidyHalvings(consensusParams);
-}
-
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    TestBlockSubsidyHalvings(chainParams->GetConsensus()); // As in main
-    TestBlockSubsidyHalvings(150); // As in regtest
-    TestBlockSubsidyHalvings(1000); // Just another interval
+    const auto chain_params = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chain_params->GetConsensus();
+
+    BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 1'000'000);
+
+    // Genesis has no subsidy.
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(0, consensus), 0);
+
+    // First reward-bearing era.
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1, consensus), 25 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(999'999, consensus), 25 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1'000'000, consensus), 25 * COIN);
+
+    // First and second halving boundaries.
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1'000'001, consensus), 12'5000'0000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(2'000'000, consensus), 12'5000'0000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(2'000'001, consensus), 6'2500'0000);
+
+    // Final atomic-unit subsidy and zero tail emission.
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(31'000'001, consensus), 1);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(32'000'000, consensus), 1);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(32'000'001, consensus), 0);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(64'000'001, consensus), 0);
 }
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += nSubsidy * 1000;
-        BOOST_CHECK(MoneyRange(nSum));
+    const auto chain_params = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chain_params->GetConsensus();
+
+    CAmount total{0};
+    int nonzero_eras{0};
+
+    for (int era = 0; era < 64; ++era) {
+        const int first_height = era * consensus.nSubsidyHalvingInterval + 1;
+        const CAmount subsidy = GetBlockSubsidy(first_height, consensus);
+
+        if (subsidy == 0) {
+            break;
+        }
+
+        total += subsidy * consensus.nSubsidyHalvingInterval;
+        ++nonzero_eras;
+
+        BOOST_CHECK(MoneyRange(total));
     }
-    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
+
+    BOOST_CHECK_EQUAL(nonzero_eras, 32);
+    BOOST_CHECK_EQUAL(total, CAmount{4'999'999'989'000'000});
+    BOOST_CHECK_EQUAL(MAX_MONEY, CAmount{5'000'000'000'000'000});
+    BOOST_CHECK_EQUAL(MAX_MONEY - total, CAmount{11'000'000});
+    BOOST_CHECK(total < MAX_MONEY);
+}
+
+BOOST_AUTO_TEST_CASE(xnuva_money_range_test)
+{
+    BOOST_CHECK_EQUAL(COIN, CAmount{100'000'000});
+    BOOST_CHECK_EQUAL(MAX_MONEY, 50'000'000 * COIN);
+
+    BOOST_CHECK(MoneyRange(0));
+    BOOST_CHECK(MoneyRange(1));
+    BOOST_CHECK(MoneyRange(MAX_MONEY - 1));
+    BOOST_CHECK(MoneyRange(MAX_MONEY));
+
+    BOOST_CHECK(!MoneyRange(-1));
+    BOOST_CHECK(!MoneyRange(MAX_MONEY + 1));
 }
 
 BOOST_AUTO_TEST_CASE(signet_parse_tests)
