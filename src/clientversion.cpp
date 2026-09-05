@@ -21,7 +21,7 @@ using util::Join;
  * for both bitcoind and bitcoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string UA_NAME("Satoshi");
+const std::string UA_NAME("Xnuva");
 
 
 #include <bitcoin-build-info.h>
@@ -94,7 +94,8 @@ std::string LicenseInfo()
                      CLIENT_NAME, "<" CLIENT_URL ">")
                .translated +
            "\n" +
-           strprintf(_("The source code is available from %s."), URL_SOURCE_CODE).translated +
+           _("Xnuva Core is derived from Bitcoin Core v31.1.") + "\n" +
+           strprintf(_("Upstream Bitcoin Core source is available from %s."), URL_SOURCE_CODE).translated +
            "\n" +
            "\n" +
            _("This is experimental software.") + "\n" +
