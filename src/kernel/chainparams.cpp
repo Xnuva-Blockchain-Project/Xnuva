@@ -524,10 +524,21 @@ public:
             consensus.vDeployments[deployment_pos].min_activation_height = version_bits_params.min_activation_height;
         }
 
-        genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
+        const char* xnuva_regtest_genesis_msg =
+            "Xnuva begins: an open chain, fair issuance, no privileged allocation.";
+        const CScript xnuva_regtest_genesis_script = CScript() << OP_RETURN;
+
+        genesis = CreateGenesisBlock(
+            xnuva_regtest_genesis_msg,
+            xnuva_regtest_genesis_script,
+            1788642000,
+            0,
+            0x207fffff,
+            1,
+            0);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"});
-        assert(genesis.hashMerkleRoot == uint256{"4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
+        assert(consensus.hashGenesisBlock == uint256{"2d95b3b13732ae491122eaacd12098b297ddbb0180f0f6bdfaeee555be491aae"});
+        assert(genesis.hashMerkleRoot == uint256{"fb923316be9e4f5db3467d8c2d159bb3a27fa9ba2c71703c078a0ea7ccb676e8"});
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();
