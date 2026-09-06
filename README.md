@@ -1,79 +1,102 @@
-Bitcoin Core integration/staging tree
-=====================================
+# Xnuva Core
 
-https://bitcoincore.org
+**Xnuva (XNUV)** is an independent Layer-1, Bitcoin-style UTXO blockchain using **RandomX v2 Proof of Work** and **ASERT difficulty adjustment**.
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+Xnuva Core is derived from the Bitcoin Core codebase, but Xnuva is a separate network with its own genesis block, consensus parameters, monetary policy, addresses, ports and chain history.
 
-What is Bitcoin Core?
----------------------
+## Mainnet status
 
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
-validate blocks and transactions. It also includes a wallet and graphical user
-interface, which can be optionally built.
+XNUV mainnet launched on **6 September 2026**.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+- Genesis hash: `0000410149e74469ea857100515f786d4bff7fdaf05863ca1b0948cf8f049f9f`
+- Block 1 hash: `c1430034fe105fae719ae896847b26a95b3e896973502ff1cdc5efaac93988a2`
+- Immutable launch tag: `xnuva-mainnet-genesis-20260906`
+- Immutable launch-source commit: `0d669d42e9810e0f5681d8b315a2bb1711265eb2`
 
-License
--------
+The launch tag is permanent and must not be moved or rewritten.
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/license/MIT.
+## Consensus and monetary policy
 
-Development Process
--------------------
+| Parameter | Xnuva |
+| --- | --- |
+| Ticker | XNUV |
+| Model | Bitcoin-style UTXO |
+| Proof of Work | RandomX v2 |
+| Block identity | SHA256d |
+| Target block time | 120 seconds |
+| Difficulty adjustment | ASERT |
+| ASERT half-life | 43,200 seconds |
+| Genesis subsidy | 0 XNUV |
+| Initial block subsidy | 25 XNUV |
+| Halving interval | 1,000,000 reward-bearing blocks |
+| Coinbase maturity | 100 blocks |
+| Amount precision | 8 decimals |
+| `MAX_MONEY` | 50,000,000 XNUV |
+| Premine | None |
+| Founder/developer allocation | None |
+| ICO | None |
+| Tail emission | None |
+| SegWit | Enabled |
+| Taproot | Enabled |
 
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+Genesis statement:
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
+> Xnuva begins: an open chain, fair issuance, no privileged allocation.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+## Mainnet network identity
 
-Testing
--------
+- P2P port: **29444**
+- RPC port: **29544**
+- Local automatic onion-service listener: **29445**
+- Bech32 HRP: **xnuva**
+- URI scheme: **xnuva:**
+- P2P message magic: `e3 fc a7 92`
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+At launch there are **no DNS or fixed seed nodes**. Until seed infrastructure is added, additional nodes must connect using a known peer, for example:
 
-### Automated Testing
+```ini
+addnode=<node-ip>:29444
+```
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled during the generation of the build system) with: `ctest`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+## Binaries
 
-There are also [regression and integration tests](/test), written
-in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `build/test/functional/test_runner.py`
-(assuming `build` is your build directory).
+A normal build produces the Xnuva executables:
 
-The CI (Continuous Integration) systems make sure that every pull request is tested on Windows, Linux, and macOS.
-The CI must pass on all commits before merge to avoid unrelated CI failures on new pull requests.
+- `xnuvad`
+- `xnuva-cli`
+- `xnuva-qt` / `xnuva` where GUI support is enabled
+- `xnuva-wallet`
+- `xnuva-tx`
+- `xnuva-util`
 
-### Manual Quality Assurance (QA) Testing
+The default data directory is `.xnuva` and the primary configuration file is `xnuva.conf`.
 
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
+## Building from source
 
-Translations
-------------
+Xnuva Core is currently intended primarily for developers and experienced node operators.
 
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://explore.transifex.com/bitcoin/bitcoin/).
+Platform-specific build documentation is available in the [doc directory](doc/).
 
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
+The project is still in early mainnet development. Test cleanup, public seed infrastructure, release packaging and easy installers are continuing after launch.
 
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+## Launch documentation
+
+The exact launch state and immutable chain identity are recorded in:
+
+- [XNUVA-LAUNCH-STATE.md](XNUVA-LAUNCH-STATE.md)
+- [XNUVA-MAINNET-LAUNCH.md](XNUVA-MAINNET-LAUNCH.md)
+- [XNUVA-POST-LAUNCH.md](XNUVA-POST-LAUNCH.md)
+
+## Development policy
+
+Mainnet genesis and the immutable launch tag are historical network anchors and must never be rewritten.
+
+Normal fixes, documentation changes, packaging work and other development continue as new commits on `main`.
+
+Any future consensus change must be introduced as an explicit coordinated network upgrade rather than by rewriting existing chain history.
+
+## License and upstream attribution
+
+Xnuva Core retains the applicable Bitcoin Core copyright notices and is distributed under the terms of the MIT license. See [COPYING](COPYING).
+
+Bitcoin Core provided the upstream codebase from which Xnuva Core was developed. Xnuva is an independent blockchain and is not the Bitcoin network.
