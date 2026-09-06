@@ -18,6 +18,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+#include <xnuva/randomx_context.h>
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
@@ -298,6 +299,8 @@ private:
 
     BlockfileType BlockfileTypeForHeight(int height);
 
+    mutable xnuva::RandomXLightContextCache m_randomx_contexts{1};
+
     const kernel::BlockManagerOpts m_opts;
 
     const FlatFileSeq m_block_file_seq;
@@ -465,6 +468,16 @@ public:
      *  Actually unlink the specified files
      */
     void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const;
+
+    /**
+     * Shared RandomX light validation contexts.
+     *
+     * RandomXLightContextCache synchronizes its own LRU state.
+     */
+    xnuva::RandomXLightContextCache& RandomXContexts() const
+    {
+        return m_randomx_contexts;
+    }
 
     /** Functions for disk access for blocks */
     bool ReadBlock(CBlock& block, const FlatFilePos& pos, const std::optional<uint256>& expected_hash) const;

@@ -40,6 +40,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
 
 #include <cerrno>
 #include <compare>
@@ -145,10 +146,11 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
-                    LogError("%s: CheckProofOfWork failed: %s\n", __func__, pindexNew->ToString());
-                    return false;
-                }
+                /*
+                 * XNUV RandomX validation is deferred until the
+                 * height-sorted LoadBlockIndex phase, where branch
+                 * ancestry is complete.
+                 */
 
                 pcursor->Next();
             } else {
@@ -464,7 +466,51 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
             return false;
         }
         previous_index = pindex;
-        pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
+
+        try {
+            const auto pow_result{
+                xnuva::ValidateProofOfWork(
+                    pindex->GetBlockHeader(),
+                    pindex->pprev,
+                    GetConsensus(),
+                    m_randomx_contexts)
+            };
+
+            if (pow_result == xnuva::PoWValidationResult::INVALID) {
+                LogError(
+                    "%s: RandomX proof of work failed for %s",
+                    __func__,
+                    pindex->ToString());
+                return false;
+            }
+
+            if (pow_result ==
+                xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+                LogError(
+                    "%s: RandomX seed context unavailable for %s",
+                    __func__,
+                    pindex->ToString());
+                return false;
+            }
+        } catch (const xnuva::RandomXResourceError& e) {
+            LogError(
+                "%s: local RandomX resource failure loading %s: %s",
+                __func__,
+                pindex->ToString(),
+                e.what());
+            return false;
+        } catch (const std::exception& e) {
+            LogError(
+                "%s: local RandomX validation failure loading %s: %s",
+                __func__,
+                pindex->ToString(),
+                e.what());
+            return false;
+        }
+
+        pindex->nChainWork =
+            (pindex->pprev ? pindex->pprev->nChainWork : 0)
+            + GetBlockProof(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
 
         // We can link the chain of blocks for which we've received transactions at some point, or
@@ -1053,11 +1099,12 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 
     const auto block_hash{block.GetHash()};
 
-    // Check the header
-    if (!CheckProofOfWork(block_hash, block.nBits, GetConsensus())) {
-        LogError("Errors in block header at %s while reading block", pos.ToString());
-        return false;
-    }
+    /*
+     * Raw FlatFilePos reads intentionally remain context-free.
+     *
+     * Reindex can encounter a child before its parent is indexed.
+     * SHA256d block identity and storage integrity remain checked here.
+     */
 
     // Signet only: check block solution
     if (GetConsensus().signet_blocks && !CheckSignetBlockSolution(block, GetConsensus())) {
@@ -1077,7 +1124,49 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 {
     const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
-    return ReadBlock(block, block_pos, index.GetBlockHash());
+
+    if (!ReadBlock(block, block_pos, index.GetBlockHash())) {
+        return false;
+    }
+
+    try {
+        const auto pow_result{
+            xnuva::ValidateProofOfWork(
+                block,
+                index.pprev,
+                GetConsensus(),
+                m_randomx_contexts)
+        };
+
+        if (pow_result == xnuva::PoWValidationResult::INVALID) {
+            LogError(
+                "RandomX proof of work failed for indexed block %s",
+                index.GetBlockHash().ToString());
+            return false;
+        }
+
+        if (pow_result ==
+            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            LogError(
+                "RandomX seed context unavailable for indexed block %s",
+                index.GetBlockHash().ToString());
+            return false;
+        }
+    } catch (const xnuva::RandomXResourceError& e) {
+        LogError(
+            "Local RandomX resource failure reading indexed block %s: %s",
+            index.GetBlockHash().ToString(),
+            e.what());
+        return false;
+    } catch (const std::exception& e) {
+        LogError(
+            "Local RandomX validation failure reading indexed block %s: %s",
+            index.GetBlockHash().ToString(),
+            e.what());
+        return false;
+    }
+
+    return true;
 }
 
 BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& pos, std::optional<std::pair<size_t, size_t>> block_part) const

@@ -61,6 +61,9 @@
 #include <util/time.h>
 #include <util/trace.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
+#include <xnuva/randomx_context.h>
+#include <xnuva/randomx_seed_tracker.h>
 
 #include <algorithm>
 #include <array>
@@ -400,11 +403,19 @@ struct Peer {
     /** Time of the last getheaders message to this peer */
     NodeClock::time_point m_last_getheaders_timestamp GUARDED_BY(NetEventsInterface::g_msgproc_mutex){};
 
-    /** Protects m_headers_sync **/
+    /** Protects headers-sync state and its XNUV RandomX branch state. **/
     Mutex m_headers_sync_mutex;
     /** Headers-sync state for this peer (eg for initial sync, or syncing large
      * reorgs) **/
     std::unique_ptr<HeadersSyncState> m_headers_sync PT_GUARDED_BY(m_headers_sync_mutex) GUARDED_BY(m_headers_sync_mutex) {};
+
+    std::unique_ptr<xnuva::RandomXSequentialSeedTracker>
+        m_headers_sync_randomx
+            PT_GUARDED_BY(m_headers_sync_mutex)
+            GUARDED_BY(m_headers_sync_mutex) {};
+
+    const CBlockIndex* m_headers_sync_randomx_anchor
+        GUARDED_BY(m_headers_sync_mutex) {nullptr};
 
     /** Whether we've sent our peer a sendheaders message. **/
     std::atomic<bool> m_sent_sendheaders{false};
@@ -658,7 +669,6 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
     /** Return true if headers are continuous and have valid proof-of-work (DoS points assigned on failure) */
-    bool CheckHeadersPoW(const std::vector<CBlockHeader>& headers, Peer& peer);
     /** Calculate an anti-DoS work threshold for headers chains */
     arith_uint256 GetAntiDoSWorkThreshold();
     /** Deal with state tracking and headers sync for peers that send
@@ -686,7 +696,8 @@ private:
      *              acceptance by the caller).
      */
     bool IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfrom,
-            std::vector<CBlockHeader>& headers)
+            std::vector<CBlockHeader>& headers,
+            bool randomx_prevalidated)
         EXCLUSIVE_LOCKS_REQUIRED(peer.m_headers_sync_mutex, !m_headers_presync_mutex, g_msgproc_mutex);
     /** Check work on a headers chain to be processed, and if insufficient,
      * initiate our anti-DoS headers sync mechanism.
@@ -2616,22 +2627,6 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
 }
 
-bool PeerManagerImpl::CheckHeadersPoW(const std::vector<CBlockHeader>& headers, Peer& peer)
-{
-    // Do these headers have proof-of-work matching what's claimed?
-    if (!HasValidProofOfWork(headers, m_chainparams.GetConsensus())) {
-        Misbehaving(peer, "header with invalid proof of work");
-        return false;
-    }
-
-    // Are these headers connected to each other?
-    if (!CheckHeadersAreContinuous(headers)) {
-        Misbehaving(peer, "non-continuous headers sequence");
-        return false;
-    }
-    return true;
-}
-
 arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold()
 {
     arith_uint256 near_chaintip_work = 0;
@@ -2682,10 +2677,131 @@ bool PeerManagerImpl::CheckHeadersAreContinuous(const std::vector<CBlockHeader>&
     return true;
 }
 
-bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfrom, std::vector<CBlockHeader>& headers)
+
+namespace {
+
+enum class XnuvaHeaderSequencePoWResult {
+    VALID,
+    INVALID,
+    LOCAL_ERROR,
+};
+
+XnuvaHeaderSequencePoWResult ValidateXnuvaHeaderSequencePoW(
+    std::span<const CBlockHeader> headers,
+    xnuva::RandomXSequentialSeedTracker& tracker,
+    const Consensus::Params& consensus_params,
+    xnuva::RandomXLightContextCache& contexts)
+{
+    for (const CBlockHeader& header : headers) {
+        const auto seed{tracker.SeedForNext()};
+
+        if (!seed) {
+            return XnuvaHeaderSequencePoWResult::LOCAL_ERROR;
+        }
+
+        try {
+            const auto result{
+                xnuva::ValidateRandomXProofOfWork(
+                    header,
+                    *seed,
+                    consensus_params,
+                    contexts)
+            };
+
+            if (result == xnuva::PoWValidationResult::INVALID) {
+                return XnuvaHeaderSequencePoWResult::INVALID;
+            }
+
+            if (result != xnuva::PoWValidationResult::VALID) {
+                return XnuvaHeaderSequencePoWResult::LOCAL_ERROR;
+            }
+        } catch (const xnuva::RandomXResourceError&) {
+            return XnuvaHeaderSequencePoWResult::LOCAL_ERROR;
+        } catch (const std::exception&) {
+            return XnuvaHeaderSequencePoWResult::LOCAL_ERROR;
+        }
+
+        if (!tracker.Advance(header)) {
+            return XnuvaHeaderSequencePoWResult::LOCAL_ERROR;
+        }
+    }
+
+    return XnuvaHeaderSequencePoWResult::VALID;
+}
+
+} // namespace
+
+bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(
+    Peer& peer,
+    CNode& pfrom,
+    std::vector<CBlockHeader>& headers,
+    bool randomx_prevalidated)
 {
     if (peer.m_headers_sync) {
-        auto result = peer.m_headers_sync->ProcessNextHeaders(headers, headers.size() == m_opts.max_headers_result);
+        if (!randomx_prevalidated) {
+            if (!peer.m_headers_sync_randomx ||
+                peer.m_headers_sync_randomx_anchor == nullptr) {
+
+                LogError(
+                    "Missing XNUV RandomX low-work state for peer=%d",
+                    pfrom.GetId());
+
+                headers.clear();
+                peer.m_headers_sync.reset(nullptr);
+                peer.m_headers_sync_randomx.reset(nullptr);
+                peer.m_headers_sync_randomx_anchor = nullptr;
+
+                LOCK(m_headers_presync_mutex);
+                m_headers_presync_stats.erase(pfrom.GetId());
+
+                return true;
+            }
+
+            const auto pow_result{
+                ValidateXnuvaHeaderSequencePoW(
+                    headers,
+                    *peer.m_headers_sync_randomx,
+                    m_chainparams.GetConsensus(),
+                    m_chainman.m_blockman.RandomXContexts())
+            };
+
+            if (pow_result ==
+                XnuvaHeaderSequencePoWResult::INVALID) {
+
+                Misbehaving(
+                    peer,
+                    "header with invalid RandomX proof of work");
+            } else if (pow_result !=
+                       XnuvaHeaderSequencePoWResult::VALID) {
+
+                LogError(
+                    "Local RandomX failure during peer=%d low-work headers",
+                    pfrom.GetId());
+            }
+
+            if (pow_result !=
+                XnuvaHeaderSequencePoWResult::VALID) {
+
+                headers.clear();
+                peer.m_headers_sync.reset(nullptr);
+                peer.m_headers_sync_randomx.reset(nullptr);
+                peer.m_headers_sync_randomx_anchor = nullptr;
+
+                LOCK(m_headers_presync_mutex);
+                m_headers_presync_stats.erase(pfrom.GetId());
+
+                return true;
+            }
+        }
+
+        const auto state_before{
+            peer.m_headers_sync->GetState()
+        };
+
+        auto result =
+            peer.m_headers_sync->ProcessNextHeaders(
+                headers,
+                headers.size() == m_opts.max_headers_result);
         // If it is a valid continuation, we should treat the existing getheaders request as responded to.
         if (result.success) peer.m_last_getheaders_timestamp = {};
         if (result.request_more) {
@@ -2704,8 +2820,30 @@ bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfro
             }
         }
 
+        if (state_before == HeadersSyncState::State::PRESYNC &&
+            peer.m_headers_sync->GetState() ==
+                HeadersSyncState::State::REDOWNLOAD) {
+
+            if (peer.m_headers_sync_randomx_anchor == nullptr) {
+                headers.clear();
+                peer.m_headers_sync.reset(nullptr);
+                peer.m_headers_sync_randomx.reset(nullptr);
+
+                LOCK(m_headers_presync_mutex);
+                m_headers_presync_stats.erase(pfrom.GetId());
+
+                return true;
+            }
+
+            peer.m_headers_sync_randomx =
+                std::make_unique<xnuva::RandomXSequentialSeedTracker>(
+                    *peer.m_headers_sync_randomx_anchor);
+        }
+
         if (peer.m_headers_sync->GetState() == HeadersSyncState::State::FINAL) {
             peer.m_headers_sync.reset(nullptr);
+            peer.m_headers_sync_randomx.reset(nullptr);
+            peer.m_headers_sync_randomx_anchor = nullptr;
 
             // Delete this peer's entry in m_headers_presync_stats.
             // If this is m_headers_presync_bestpeer, it will be replaced later
@@ -2766,6 +2904,35 @@ bool PeerManagerImpl::IsContinuationOfLowWorkHeadersSync(Peer& peer, CNode& pfro
 
 bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlockIndex& chain_start_header, std::vector<CBlockHeader>& headers)
 {
+    auto randomx_tracker{
+        std::make_unique<xnuva::RandomXSequentialSeedTracker>(
+            chain_start_header)
+    };
+
+    const auto pow_result{
+        ValidateXnuvaHeaderSequencePoW(
+            headers,
+            *randomx_tracker,
+            m_chainparams.GetConsensus(),
+            m_chainman.m_blockman.RandomXContexts())
+    };
+
+    if (pow_result == XnuvaHeaderSequencePoWResult::INVALID) {
+        Misbehaving(
+            peer,
+            "header with invalid RandomX proof of work");
+        headers.clear();
+        return true;
+    }
+
+    if (pow_result != XnuvaHeaderSequencePoWResult::VALID) {
+        LogError(
+            "Local RandomX failure validating peer=%d header batch",
+            pfrom.GetId());
+        headers.clear();
+        return true;
+    }
+
     // Calculate the claimed total work on this chain.
     arith_uint256 total_work = chain_start_header.nChainWork + CalculateClaimedHeadersWork(headers);
 
@@ -2793,10 +2960,13 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
             peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
                 m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work));
 
+            peer.m_headers_sync_randomx_anchor = &chain_start_header;
+            peer.m_headers_sync_randomx = std::move(randomx_tracker);
+
             // Now a HeadersSyncState object for tracking this synchronization
             // is created, process the headers using it as normal. Failures are
             // handled inside of IsContinuationOfLowWorkHeadersSync.
-            (void)IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers);
+            (void)IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers, true);
         } else {
             LogDebug(BCLog::NET, "Ignoring low-work chain (height=%u) from peer=%d\n", chain_start_header.nHeight + headers.size(), pfrom.GetId());
         }
@@ -2971,6 +3141,9 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
         LOCK(peer.m_headers_sync_mutex);
         if (peer.m_headers_sync) {
             peer.m_headers_sync.reset(nullptr);
+            peer.m_headers_sync_randomx.reset(nullptr);
+            peer.m_headers_sync_randomx_anchor = nullptr;
+
             LOCK(m_headers_presync_mutex);
             m_headers_presync_stats.erase(pfrom.GetId());
         }
@@ -2984,8 +3157,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     // We'll rely on headers having valid proof-of-work further down, as an
     // anti-DoS criteria (note: this check is required before passing any
     // headers into HeadersSyncState).
-    if (!CheckHeadersPoW(headers, peer)) {
-        // Misbehaving() calls are handled within CheckHeadersPoW(), so we can
+    if (!CheckHeadersAreContinuous(headers)) {
         // just return. (Note that even if a header is announced via compact
         // block, the header itself should be valid, so this type of error can
         // always be punished.)
@@ -3006,7 +3178,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     {
         LOCK(peer.m_headers_sync_mutex);
 
-        already_validated_work = IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers);
+        already_validated_work = IsContinuationOfLowWorkHeadersSync(peer, pfrom, headers, false);
 
         // The headers we passed in may have been:
         // - untouched, perhaps if no headers-sync was in progress, or some

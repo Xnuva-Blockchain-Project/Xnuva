@@ -295,6 +295,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
 )
 target_link_libraries(bitcoin_node
   PRIVATE
+    xnuva_randomx
     core_interface
     bitcoin_common
     bitcoin_util

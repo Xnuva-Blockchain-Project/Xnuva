@@ -6,6 +6,8 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <validation.h>
+#include <xnuva/pow_validation.h>
+#include <xnuva/randomx_context.h>
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -3803,9 +3805,23 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+    /*
+     * SHA256d remains CBlockHeader identity.
+     *
+     * Only the height-zero anchor has context-free SHA256d proof.
+     * Post-genesis XNUV proof is enforced contextually with RandomX.
+     */
+    if (fCheckPOW &&
+        block.hashPrevBlock.IsNull() &&
+        !CheckProofOfWorkImpl(
+            block.GetHash(),
+            block.nBits,
+            consensusParams)) {
+        return state.Invalid(
+            BlockValidationResult::BLOCK_INVALID_HEADER,
+            "high-hash",
+            "genesis proof of work failed");
+    }
 
     return true;
 }
@@ -3994,12 +4010,6 @@ void ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIn
     UpdateUncommittedBlockStructures(block, pindexPrev);
 }
 
-bool HasValidProofOfWork(std::span<const CBlockHeader> headers, const Consensus::Params& consensusParams)
-{
-    return std::ranges::all_of(headers,
-                               [&](const auto& header) { return CheckProofOfWork(header.GetHash(), header.nBits, consensusParams); });
-}
-
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
 {
     BlockValidationState state;
@@ -4059,10 +4069,46 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
 
-    // Check proof of work
+    // Check claimed target transition.
     const Consensus::Params& consensusParams = chainman.GetConsensus();
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
+
+    try {
+        const auto pow_result{
+            xnuva::ValidateProofOfWork(
+                block,
+                pindexPrev,
+                consensusParams,
+                blockman.RandomXContexts())
+        };
+
+        if (pow_result == xnuva::PoWValidationResult::INVALID) {
+            return state.Invalid(
+                BlockValidationResult::BLOCK_INVALID_HEADER,
+                "high-hash",
+                "RandomX proof of work failed");
+        }
+
+        if (pow_result ==
+            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            state.Error(
+                "RandomX branch seed context unavailable");
+            return false;
+        }
+    } catch (const xnuva::RandomXResourceError& e) {
+        state.Error(
+            strprintf(
+                "local RandomX resource failure: %s",
+                e.what()));
+        return false;
+    } catch (const std::exception& e) {
+        state.Error(
+            strprintf(
+                "local RandomX validation failure: %s",
+                e.what()));
+        return false;
+    }
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
