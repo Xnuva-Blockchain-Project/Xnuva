@@ -42,6 +42,8 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <xnuva/pow_validation.h>
+#include <xnuva/randomx_context.h>
+#include <arith_uint256.h>
 #include <validationinterface.h>
 
 #include <cstdint>
@@ -153,42 +155,95 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
             "RandomX mining previous block context unavailable");
     }
 
+    const auto seed{
+        xnuva::ResolveRandomXSeed(
+            pindex_prev)
+    };
+
+    if (!seed) {
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "RandomX mining seed context unavailable");
+    }
+
+    const auto target{
+        DeriveTarget(
+            block.nBits,
+            chainman.GetConsensus().powLimit)
+    };
+
+    if (!target) {
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "RandomX mining target is invalid");
+    }
+
+    /*
+     * Mining owns one optimized VM for the entire nonce loop.
+     * Consensus validation remains unchanged and continues to
+     * use the node's qualified RandomX validation context.
+     */
+    xnuva::RandomXMiningHasher mining_hasher{
+        *seed
+    };
+
+    /*
+     * One pre-search equivalence check proves that the optimized
+     * mining VM produces the exact same digest as the established
+     * portable consensus RandomX context for this seed/header.
+     */
+    const auto validation_context{
+        chainman.m_blockman.RandomXContexts().Get(
+            *seed)
+    };
+
+    const uint256 mining_probe{
+        mining_hasher.HashHeader(block)
+    };
+
+    const uint256 validation_probe{
+        validation_context->HashHeader(block)
+    };
+
+    if (mining_probe != validation_probe) {
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "RandomX mining/validation digest mismatch");
+    }
+
     bool valid_pow{false};
 
     while (max_tries > 0 &&
-           block.nNonce < std::numeric_limits<uint32_t>::max() &&
+           block.nNonce <
+               std::numeric_limits<uint32_t>::max() &&
            !chainman.m_interrupt) {
 
-        const auto result{
-            xnuva::ValidateProofOfWork(
-                block,
-                pindex_prev,
-                chainman.GetConsensus(),
-                chainman.m_blockman.RandomXContexts())
+        const uint256 pow_hash{
+            mining_hasher.HashHeader(
+                block)
         };
 
-        if (result == xnuva::PoWValidationResult::VALID) {
+        if (UintToArith256(pow_hash) <=
+            *target) {
+
             valid_pow = true;
             break;
-        }
-
-        if (result ==
-            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
-            throw JSONRPCError(
-                RPC_INTERNAL_ERROR,
-                "RandomX mining seed context unavailable");
         }
 
         ++block.nNonce;
         --max_tries;
     }
 
-    if (max_tries == 0 || chainman.m_interrupt) {
+    if (max_tries == 0 ||
+        chainman.m_interrupt) {
+
         return false;
     }
 
     if (!valid_pow &&
-        block.nNonce == std::numeric_limits<uint32_t>::max()) {
+        block.nNonce ==
+            std::numeric_limits<uint32_t>::max()) {
+
         return true;
     }
 
@@ -196,12 +251,44 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
         return false;
     }
 
-    block_out = std::make_shared<const CBlock>(std::move(block));
+    /*
+     * Before submission, pass the solved header once through the
+     * existing consensus-validation primitive. This proves the
+     * optimized search found exactly the same valid RandomX proof.
+     */
+    const auto final_validation{
+        xnuva::ValidateProofOfWork(
+            block,
+            pindex_prev,
+            chainman.GetConsensus(),
+            chainman.m_blockman.RandomXContexts())
+    };
 
-    if (!process_new_block) return true;
+    if (final_validation !=
+        xnuva::PoWValidationResult::VALID) {
 
-    if (!chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "RandomX optimized mining solution failed consensus validation");
+    }
+
+    block_out =
+        std::make_shared<const CBlock>(
+            std::move(block));
+
+    if (!process_new_block) {
+        return true;
+    }
+
+    if (!chainman.ProcessNewBlock(
+            block_out,
+            /*force_processing=*/true,
+            /*min_pow_checked=*/true,
+            nullptr)) {
+
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "ProcessNewBlock, block not accepted");
     }
 
     return true;

@@ -88,7 +88,7 @@ public:
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 0;
         consensus.MinBIP9WarningHeight = 0;
-        consensus.powLimit = uint256{"00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+        consensus.powLimit = uint256{"0007ffff00000000000000000000000000000000000000000000000000000000"};
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 2 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -126,10 +126,23 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
-        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
+        const char* xnuva_genesis_msg =
+            "Xnuva begins: an open chain, fair issuance, no privileged allocation.";
+        const CScript xnuva_genesis_script =
+            CScript() << OP_RETURN;
+
+        genesis = CreateGenesisBlock(
+            xnuva_genesis_msg,
+            xnuva_genesis_script,
+            1788717675,
+            9105,
+            0x1f07ffff,
+            1,
+            0 * COIN);
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"});
-        assert(genesis.hashMerkleRoot == uint256{"4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
+        assert(consensus.hashGenesisBlock == uint256{"0000410149e74469ea857100515f786d4bff7fdaf05863ca1b0948cf8f049f9f"});
+        assert(genesis.hashMerkleRoot == uint256{"fb923316be9e4f5db3467d8c2d159bb3a27fa9ba2c71703c078a0ea7ccb676e8"});
 
         vFixedSeeds.clear();
         vSeeds.clear();

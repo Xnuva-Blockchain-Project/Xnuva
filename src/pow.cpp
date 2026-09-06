@@ -6,6 +6,8 @@
 #include <pow.h>
 
 #include <arith_uint256.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <ios>
 #include <chain.h>
 #include <primitives/block.h>
 #include <uint256.h>
@@ -32,7 +34,6 @@ arith_uint256 CalculateASERT(
     const int64_t nHalfLife) noexcept
 {
     assert(refTarget > 0 && refTarget <= powLimit);
-    assert((powLimit >> 224) == 0);
     assert(nHeightDiff >= 0);
     assert(nHalfLife > 0);
     assert(nPowTargetSpacing > 0);
@@ -71,29 +72,76 @@ arith_uint256 CalculateASERT(
             (1ULL << 47)
         ) >> 48);
 
-    arith_uint256 nextTarget =
-        refTarget * factor;
+    const auto to_wide = [](const arith_uint256& value) {
+        return boost::multiprecision::uint512_t{
+            "0x" + value.GetHex()
+        };
+    };
+
+    boost::multiprecision::uint512_t wide_target =
+        to_wide(refTarget) * factor;
+
+    const boost::multiprecision::uint512_t wide_limit =
+        to_wide(powLimit);
 
     shifts -= 16;
 
-    if (shifts <= 0) {
-        nextTarget >>= -shifts;
-    } else {
-        const auto shifted =
-            nextTarget << shifts;
+    if (shifts > 0) {
+        if (shifts >= 512) {
+            return powLimit;
+        }
 
-        if ((shifted >> shifts) != nextTarget) {
-            nextTarget = powLimit;
+        const auto maximum_before_shift =
+            wide_limit >> static_cast<unsigned int>(shifts);
+
+        if (wide_target > maximum_before_shift) {
+            return powLimit;
+        }
+
+        wide_target <<= static_cast<unsigned int>(shifts);
+    } else if (shifts < 0) {
+        const uint64_t right_shift =
+            static_cast<uint64_t>(-shifts);
+
+        if (right_shift >= 512) {
+            wide_target = 0;
         } else {
-            nextTarget = shifted;
+            wide_target >>= static_cast<unsigned int>(right_shift);
         }
     }
 
-    if (nextTarget == 0) {
-        nextTarget = arith_uint256{1};
-    } else if (nextTarget > powLimit) {
-        nextTarget = powLimit;
+    if (wide_target == 0) {
+        wide_target = 1;
+    } else if (wide_target > wide_limit) {
+        wide_target = wide_limit;
     }
+
+    arith_uint256 nextTarget{0};
+    boost::multiprecision::uint512_t remaining =
+        wide_target;
+
+    const boost::multiprecision::uint512_t limb_mask{
+        0xffffffffffffffffULL
+    };
+
+    for (unsigned int limb = 0; limb < 4; ++limb) {
+        const boost::multiprecision::uint512_t low =
+            remaining & limb_mask;
+
+        const uint64_t value =
+            low.convert_to<uint64_t>();
+
+        arith_uint256 part{value};
+
+        if (limb != 0) {
+            part <<= limb * 64;
+        }
+
+        nextTarget |= part;
+        remaining >>= 64;
+    }
+
+    assert(remaining == 0);
 
     return nextTarget;
 }

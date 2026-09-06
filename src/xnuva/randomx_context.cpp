@@ -79,6 +79,139 @@ struct RandomXLightCache::Impl {
     }
 };
 
+struct RandomXMiningHasher::Impl {
+    randomx_cache* cache{nullptr};
+    randomx_vm* vm{nullptr};
+
+    explicit Impl(
+        const RandomXSeed& seed)
+    {
+        /*
+         * First try RandomX's machine-recommended light-mode
+         * acceleration flags. V2 is applied to the VM.
+         */
+        const randomx_flags recommended{
+            randomx_get_flags()
+        };
+
+        cache = randomx_alloc_cache(
+            recommended);
+
+        if (cache != nullptr) {
+            randomx_init_cache(
+                cache,
+                seed.block_id.data(),
+                seed.block_id.size());
+
+            const randomx_flags vm_flags{
+                recommended |
+                RANDOMX_FLAG_V2
+            };
+
+            vm = randomx_create_vm(
+                vm_flags,
+                cache,
+                nullptr);
+        }
+
+        /*
+         * Conservative portable fallback. This is the same
+         * algorithm and produces the same 32-byte RandomX v2
+         * digest; only execution speed changes.
+         */
+        if (vm == nullptr) {
+            if (cache != nullptr) {
+                randomx_release_cache(cache);
+                cache = nullptr;
+            }
+
+            cache = randomx_alloc_cache(
+                RANDOMX_FLAG_DEFAULT);
+
+            if (cache == nullptr) {
+                throw RandomXResourceError(
+                    "RandomX mining cache allocation failed");
+            }
+
+            randomx_init_cache(
+                cache,
+                seed.block_id.data(),
+                seed.block_id.size());
+
+            vm = randomx_create_vm(
+                RANDOMX_FLAG_V2,
+                cache,
+                nullptr);
+        }
+
+        if (vm == nullptr) {
+            if (cache != nullptr) {
+                randomx_release_cache(cache);
+                cache = nullptr;
+            }
+
+            throw RandomXResourceError(
+                "RandomX v2 mining VM allocation failed");
+        }
+    }
+
+    ~Impl()
+    {
+        if (vm != nullptr) {
+            randomx_destroy_vm(vm);
+            vm = nullptr;
+        }
+
+        if (cache != nullptr) {
+            randomx_release_cache(cache);
+            cache = nullptr;
+        }
+    }
+};
+
+RandomXMiningHasher::RandomXMiningHasher(
+    const RandomXSeed& seed)
+    : m_impl{
+        std::make_unique<Impl>(seed)
+    }
+{
+}
+
+RandomXMiningHasher::~RandomXMiningHasher() = default;
+
+uint256 RandomXMiningHasher::Hash(
+    std::span<const std::byte> input) const
+{
+    uint256 result;
+
+    randomx_calculate_hash(
+        m_impl->vm,
+        input.data(),
+        input.size(),
+        result.begin());
+
+    return result;
+}
+
+uint256 RandomXMiningHasher::HashHeader(
+    const CBlockHeader& header) const
+{
+    DataStream stream{};
+    stream << header;
+
+    if (stream.size() != 80) {
+        throw std::runtime_error(
+            "Xnuva RandomX mining header serialization is not 80 bytes");
+    }
+
+    return Hash(
+        std::span<const std::byte>{
+            stream.data(),
+            stream.size()
+        });
+}
+
+
 RandomXLightCache::RandomXLightCache(
     RandomXSeed seed)
     : m_seed{std::move(seed)},

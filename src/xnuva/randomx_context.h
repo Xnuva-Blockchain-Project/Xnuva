@@ -51,6 +51,38 @@ public:
 };
 
 /**
+ * Dedicated sequential RandomX v2 mining hasher.
+ *
+ * Unlike RandomXLightCache::Hash(), this object owns one VM for the
+ * complete nonce search. It is deliberately mining-only; ordinary
+ * consensus validation keeps its per-call isolated VM behavior.
+ */
+class RandomXMiningHasher
+{
+public:
+    explicit RandomXMiningHasher(
+        const RandomXSeed& seed);
+
+    ~RandomXMiningHasher();
+
+    RandomXMiningHasher(
+        const RandomXMiningHasher&) = delete;
+
+    RandomXMiningHasher& operator=(
+        const RandomXMiningHasher&) = delete;
+
+    uint256 Hash(
+        std::span<const std::byte> input) const;
+
+    uint256 HashHeader(
+        const CBlockHeader& header) const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> m_impl;
+};
+
+/**
  * One immutable RandomX light-mode cache for one exact seed block.
  *
  * Multiple separate VMs may use this cache concurrently.
