@@ -63,6 +63,7 @@ add_subdirectory(util)
 add_library(xnuva_randomx STATIC EXCLUDE_FROM_ALL
   xnuva/randomx.cpp
   xnuva/randomx_context.cpp
+  xnuva/pow_validation.cpp
 )
 target_include_directories(xnuva_randomx
   PRIVATE
