@@ -127,6 +127,7 @@ add_executable(test_bitcoin
   xnuva_randomx_tests.cpp
   xnuva_randomx_context_tests.cpp
   xnuva_pow_validation_tests.cpp
+  xnuva_randomx_seed_tracker_tests.cpp
   util_check_tests.cpp
   util_expected_tests.cpp
   util_string_tests.cpp

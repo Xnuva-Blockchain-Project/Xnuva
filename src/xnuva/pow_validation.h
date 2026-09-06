@@ -11,6 +11,7 @@ struct Params;
 namespace xnuva {
 
 class RandomXLightContextCache;
+struct RandomXSeed;
 
 /**
  * Result of validating one Xnuva block header's proof of work.
@@ -51,6 +52,24 @@ enum class PoWValidationResult {
 PoWValidationResult ValidateProofOfWork(
     const CBlockHeader& header,
     const CBlockIndex* pindex_prev,
+    const Consensus::Params& params,
+    RandomXLightContextCache& randomx_contexts);
+
+/**
+ * Validate post-genesis RandomX proof of work using an already resolved,
+ * exact branch seed.
+ *
+ * This entry point exists for strictly sequential unindexed header streams,
+ * where no CBlockIndex exists yet for the candidate ancestry.
+ *
+ * It never changes CBlockHeader::GetHash() and never treats the supplied seed
+ * block ID as display-order hex.
+ *
+ * RandomXResourceError deliberately propagates.
+ */
+PoWValidationResult ValidateRandomXProofOfWork(
+    const CBlockHeader& header,
+    const RandomXSeed& seed,
     const Consensus::Params& params,
     RandomXLightContextCache& randomx_contexts);
 

@@ -31,6 +31,32 @@ PoWValidationResult ValidateProofOfWork(
     }
 
     /*
+     * Resolve the seed only through the supplied previous block index.
+     * ResolveRandomXSeed() deliberately performs branch-contextual
+     * GetAncestor() lookup and never consults the globally active chain.
+     */
+    const auto seed{
+        ResolveRandomXSeed(pindex_prev)
+    };
+
+    if (!seed) {
+        return PoWValidationResult::CONTEXT_UNAVAILABLE;
+    }
+
+    return ValidateRandomXProofOfWork(
+        header,
+        *seed,
+        params,
+        randomx_contexts);
+}
+
+PoWValidationResult ValidateRandomXProofOfWork(
+    const CBlockHeader& header,
+    const RandomXSeed& seed,
+    const Consensus::Params& params,
+    RandomXLightContextCache& randomx_contexts)
+{
+    /*
      * Reject malformed/out-of-range compact targets before doing any
      * expensive RandomX work.
      */
@@ -45,24 +71,11 @@ PoWValidationResult ValidateProofOfWork(
     }
 
     /*
-     * Resolve the seed only through the supplied previous block index.
-     * ResolveRandomXSeed() deliberately performs branch-contextual
-     * GetAncestor() lookup and never consults the globally active chain.
-     */
-    const auto seed{
-        ResolveRandomXSeed(pindex_prev)
-    };
-
-    if (!seed) {
-        return PoWValidationResult::CONTEXT_UNAVAILABLE;
-    }
-
-    /*
      * RandomXResourceError intentionally propagates from Get()/HashHeader().
      * Local allocation/cache/VM failure is not consensus-invalid proof.
      */
     const auto context{
-        randomx_contexts.Get(*seed)
+        randomx_contexts.Get(seed)
     };
 
     const uint256 pow_hash{
