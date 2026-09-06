@@ -62,6 +62,7 @@ add_subdirectory(util)
 # Consensus validation does not use this target yet.
 add_library(xnuva_randomx STATIC EXCLUDE_FROM_ALL
   xnuva/randomx.cpp
+  xnuva/randomx_context.cpp
 )
 target_include_directories(xnuva_randomx
   PRIVATE
