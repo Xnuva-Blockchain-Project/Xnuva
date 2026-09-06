@@ -34,22 +34,25 @@ const CBaseChainParams& BaseParams()
 }
 
 /**
- * Xnuva pre-genesis development RPC ports.
- * These values are not a public-mainnet port freeze.
+ * Xnuva RPC ports.
+ *
+ * P2P listeners use the 294xx even-numbered ports.
+ * Bitcoin Core's automatic onion service listener reserves P2P+1,
+ * so RPC uses a separate 295xx family to avoid local bind collisions.
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
 {
     switch (chain) {
     case ChainType::MAIN:
-        return std::make_unique<CBaseChainParams>("", 29445);
+        return std::make_unique<CBaseChainParams>("", 29544);
     case ChainType::TESTNET:
-        return std::make_unique<CBaseChainParams>("testnet", 29447);
+        return std::make_unique<CBaseChainParams>("testnet", 29546);
     case ChainType::TESTNET4:
-        return std::make_unique<CBaseChainParams>("testnet4", 29449);
+        return std::make_unique<CBaseChainParams>("testnet4", 29548);
     case ChainType::SIGNET:
-        return std::make_unique<CBaseChainParams>("signet", 29451);
+        return std::make_unique<CBaseChainParams>("signet", 29550);
     case ChainType::REGTEST:
-        return std::make_unique<CBaseChainParams>("regtest", 29453);
+        return std::make_unique<CBaseChainParams>("regtest", 29552);
     }
     assert(false);
 }
