@@ -59,9 +59,10 @@ BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
     unsigned int expected_nbits = 0x1c0168fdU;
     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), expected_nbits);
     BOOST_CHECK(PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, expected_nbits));
-    // Test that reducing nbits further would not be a PermittedDifficultyTransition.
+    // ASERT uses this helper only as a target-sanity precheck.
+    // Exact nBits is enforced contextually by GetNextWorkRequired().
     unsigned int invalid_nbits = expected_nbits-1;
-    BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
+    BOOST_CHECK(PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
 
 /* Test the constraint on the upper bound for actual time taken */
@@ -76,9 +77,10 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     unsigned int expected_nbits = 0x1d00e1fdU;
     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), expected_nbits);
     BOOST_CHECK(PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, expected_nbits));
-    // Test that increasing nbits further would not be a PermittedDifficultyTransition.
+    // ASERT uses this helper only as a target-sanity precheck.
+    // Exact nBits is enforced contextually by GetNextWorkRequired().
     unsigned int invalid_nbits = expected_nbits+1;
-    BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
+    BOOST_CHECK(PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
@@ -207,6 +209,122 @@ BOOST_AUTO_TEST_CASE(ChainParams_TESTNET4_sanity)
 BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
 {
     sanity_check_chainparams(*m_node.args, ChainType::SIGNET);
+}
+
+
+BOOST_AUTO_TEST_CASE(xnuva_asert_fixed_point_contract)
+{
+    const auto chain_params =
+        CreateChainParams(
+            *m_node.args,
+            ChainType::MAIN);
+
+    const auto& consensus =
+        chain_params->GetConsensus();
+
+    BOOST_REQUIRE_EQUAL(
+        consensus.nPowTargetSpacing,
+        120);
+
+    const arith_uint256 pow_limit =
+        UintToArith256(consensus.powLimit);
+
+    arith_uint256 ref = pow_limit;
+    ref >>= 4;
+
+    constexpr int64_t half_life =
+        12 * 60 * 60;
+
+    constexpr int64_t height_diff =
+        100;
+
+    const int64_t ideal_time =
+        consensus.nPowTargetSpacing *
+        (height_diff + 1);
+
+    const auto ideal =
+        CalculateASERT(
+            ref,
+            consensus.nPowTargetSpacing,
+            ideal_time,
+            height_diff,
+            pow_limit,
+            half_life);
+
+    const auto one_half_life_late =
+        CalculateASERT(
+            ref,
+            consensus.nPowTargetSpacing,
+            ideal_time + half_life,
+            height_diff,
+            pow_limit,
+            half_life);
+
+    const auto one_half_life_early =
+        CalculateASERT(
+            ref,
+            consensus.nPowTargetSpacing,
+            ideal_time - half_life,
+            height_diff,
+            pow_limit,
+            half_life);
+
+    BOOST_CHECK(ideal == ref);
+    BOOST_CHECK(
+        one_half_life_late ==
+        (ref << 1));
+    BOOST_CHECK(
+        one_half_life_early ==
+        (ref >> 1));
+}
+
+
+BOOST_AUTO_TEST_CASE(xnuva_asert_genesis_anchor_schedule)
+{
+    const auto chain_params =
+        CreateChainParams(
+            *m_node.args,
+            ChainType::MAIN);
+
+    const auto& consensus =
+        chain_params->GetConsensus();
+
+    BOOST_REQUIRE_EQUAL(
+        consensus.nPowTargetSpacing,
+        120);
+
+    const arith_uint256 pow_limit =
+        UintToArith256(consensus.powLimit);
+
+    arith_uint256 initial_target = pow_limit;
+    initial_target >>= 4;
+
+    CBlockIndex genesis;
+    genesis.nHeight = 0;
+    genesis.nTime = 1700000000;
+    genesis.nBits =
+        initial_target.GetCompact();
+
+    CBlockIndex block1;
+    block1.pprev = &genesis;
+    block1.nHeight = 1;
+    block1.nTime =
+        genesis.nTime +
+        consensus.nPowTargetSpacing;
+    block1.nBits =
+        genesis.nBits;
+
+    CBlockHeader candidate;
+    candidate.nTime =
+        block1.nTime +
+        consensus.nPowTargetSpacing;
+
+    BOOST_CHECK_EQUAL(
+        GetNextWorkRequired(
+            &block1,
+            &candidate,
+            consensus),
+        genesis.nBits);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

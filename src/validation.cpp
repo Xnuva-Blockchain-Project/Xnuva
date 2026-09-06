@@ -4063,7 +4063,7 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
  *  v0.12 and v0.15 (when no additional protection was in place) whereby an attacker could unboundedly
  *  grow our in-memory block index. See https://bitcoincore.org/en/2024/07/03/disclose-header-spam.
  */
-static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev, const bool check_pow) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(::cs_main);
     assert(pindexPrev != nullptr);
@@ -4074,40 +4074,42 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 
-    try {
-        const auto pow_result{
-            xnuva::ValidateProofOfWork(
-                block,
-                pindexPrev,
-                consensusParams,
-                blockman.RandomXContexts())
-        };
+    if (check_pow) {
+        try {
+            const auto pow_result{
+                xnuva::ValidateProofOfWork(
+                    block,
+                    pindexPrev,
+                    consensusParams,
+                    blockman.RandomXContexts())
+            };
 
-        if (pow_result == xnuva::PoWValidationResult::INVALID) {
-            return state.Invalid(
-                BlockValidationResult::BLOCK_INVALID_HEADER,
-                "high-hash",
-                "RandomX proof of work failed");
-        }
+            if (pow_result == xnuva::PoWValidationResult::INVALID) {
+                return state.Invalid(
+                    BlockValidationResult::BLOCK_INVALID_HEADER,
+                    "high-hash",
+                    "RandomX proof of work failed");
+            }
 
-        if (pow_result ==
-            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            if (pow_result ==
+                xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+                state.Error(
+                    "RandomX branch seed context unavailable");
+                return false;
+            }
+        } catch (const xnuva::RandomXResourceError& e) {
             state.Error(
-                "RandomX branch seed context unavailable");
+                strprintf(
+                    "local RandomX resource failure: %s",
+                    e.what()));
+            return false;
+        } catch (const std::exception& e) {
+            state.Error(
+                strprintf(
+                    "local RandomX validation failure: %s",
+                    e.what()));
             return false;
         }
-    } catch (const xnuva::RandomXResourceError& e) {
-        state.Error(
-            strprintf(
-                "local RandomX resource failure: %s",
-                e.what()));
-        return false;
-    } catch (const std::exception& e) {
-        state.Error(
-            strprintf(
-                "local RandomX validation failure: %s",
-                e.what()));
-        return false;
     }
 
     // Check timestamp against prev
@@ -4243,7 +4245,7 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             LogDebug(BCLog::VALIDATION, "header %s has prev block invalid: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
-        if (!ContextualCheckBlockHeader(block, state, m_blockman, *this, pindexPrev)) {
+        if (!ContextualCheckBlockHeader(block, state, m_blockman, *this, pindexPrev, true)) {
             LogDebug(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
@@ -4524,7 +4526,7 @@ BlockValidationState TestBlockValidity(
      * - do run ContextualCheckBlock()
      */
 
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, tip)) {
+    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, tip, check_pow)) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }

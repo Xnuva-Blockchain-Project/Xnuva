@@ -29,6 +29,20 @@ std::optional<arith_uint256> DeriveTarget(unsigned int nBits, uint256 pow_limit)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
+
+
+/**
+ * XNUVA ASERTI3 fixed-point target calculation.
+ * Consensus-critical: integer arithmetic only.
+ */
+arith_uint256 CalculateASERT(
+    const arith_uint256& refTarget,
+    int64_t nPowTargetSpacing,
+    int64_t nTimeDiff,
+    int64_t nHeightDiff,
+    const arith_uint256& powLimit,
+    int64_t nHalfLife) noexcept;
+
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Params&);

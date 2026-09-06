@@ -14,10 +14,12 @@
 #include <test/util/script.h>
 #include <util/check.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
 
 #include <algorithm>
+#include <stdexcept>
 #include <memory>
 
 using node::BlockAssembler;
@@ -95,7 +97,39 @@ protected:
 
 COutPoint MineBlock(const NodeContext& node, std::shared_ptr<CBlock>& block)
 {
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
+    auto& chainman{*Assert(node.chainman)};
+
+    const CBlockIndex* pindex_prev{
+        WITH_LOCK(
+            ::cs_main,
+            return chainman.m_blockman.LookupBlockIndex(
+                block->hashPrevBlock))
+    };
+
+    if (pindex_prev == nullptr) {
+        throw std::runtime_error{
+            "RandomX MineBlock previous block unavailable"};
+    }
+
+    while (true) {
+        const auto result{
+            xnuva::ValidateProofOfWork(
+                *block,
+                pindex_prev,
+                chainman.GetConsensus(),
+                chainman.m_blockman.RandomXContexts())
+        };
+
+        if (result == xnuva::PoWValidationResult::VALID) {
+            break;
+        }
+
+        if (result ==
+            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            throw std::runtime_error{
+                "RandomX MineBlock seed unavailable"};
+        }
+
         ++block->nNonce;
         assert(block->nNonce);
     }

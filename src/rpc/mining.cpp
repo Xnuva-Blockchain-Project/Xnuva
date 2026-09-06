@@ -41,6 +41,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
 #include <validationinterface.h>
 
 #include <cstdint>
@@ -139,15 +140,60 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     block_out.reset();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainman.GetConsensus()) && !chainman.m_interrupt) {
+    const CBlockIndex* pindex_prev{
+        WITH_LOCK(
+            cs_main,
+            return chainman.m_blockman.LookupBlockIndex(
+                block.hashPrevBlock))
+    };
+
+    if (pindex_prev == nullptr) {
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "RandomX mining previous block context unavailable");
+    }
+
+    bool valid_pow{false};
+
+    while (max_tries > 0 &&
+           block.nNonce < std::numeric_limits<uint32_t>::max() &&
+           !chainman.m_interrupt) {
+
+        const auto result{
+            xnuva::ValidateProofOfWork(
+                block,
+                pindex_prev,
+                chainman.GetConsensus(),
+                chainman.m_blockman.RandomXContexts())
+        };
+
+        if (result == xnuva::PoWValidationResult::VALID) {
+            valid_pow = true;
+            break;
+        }
+
+        if (result ==
+            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            throw JSONRPCError(
+                RPC_INTERNAL_ERROR,
+                "RandomX mining seed context unavailable");
+        }
+
         ++block.nNonce;
         --max_tries;
     }
+
     if (max_tries == 0 || chainman.m_interrupt) {
         return false;
     }
-    if (block.nNonce == std::numeric_limits<uint32_t>::max()) {
+
+    if (!valid_pow &&
+        block.nNonce == std::numeric_limits<uint32_t>::max()) {
         return true;
+    }
+
+    if (!valid_pow) {
+        return false;
     }
 
     block_out = std::make_shared<const CBlock>(std::move(block));

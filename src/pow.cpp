@@ -11,40 +11,163 @@
 #include <uint256.h>
 #include <util/check.h>
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+/**
+ * XNUVA ASERTI3 fixed-point implementation.
+ *
+ * Formula:
+ *
+ * target =
+ *   anchor_target *
+ *   2^((elapsed - spacing * scheduled_blocks) / half_life)
+ *
+ * The fractional exponent uses the established cubic integer
+ * approximation from the ASERTI3 reference implementation.
+ */
+arith_uint256 CalculateASERT(
+    const arith_uint256& refTarget,
+    const int64_t nPowTargetSpacing,
+    const int64_t nTimeDiff,
+    const int64_t nHeightDiff,
+    const arith_uint256& powLimit,
+    const int64_t nHalfLife) noexcept
+{
+    assert(refTarget > 0 && refTarget <= powLimit);
+    assert((powLimit >> 224) == 0);
+    assert(nHeightDiff >= 0);
+    assert(nHalfLife > 0);
+    assert(nPowTargetSpacing > 0);
+
+    const int64_t ideal_time =
+        nPowTargetSpacing * (nHeightDiff + 1);
+
+    const int64_t schedule_delta =
+        nTimeDiff - ideal_time;
+
+    // schedule_delta * 65536 must fit int64_t.
+    assert(
+        schedule_delta > -(int64_t{1} << 47) &&
+        schedule_delta <  (int64_t{1} << 47));
+
+    const int64_t exponent =
+        (schedule_delta * 65536) / nHalfLife;
+
+    static_assert(
+        int64_t(-1) >> 1 == int64_t(-1),
+        "ASERT requires arithmetic right shift");
+
+    int64_t shifts = exponent >> 16;
+    const auto frac = uint16_t(exponent);
+
+    assert(
+        exponent ==
+        (shifts * 65536) + frac);
+
+    const uint32_t factor =
+        65536 +
+        ((
+            195766423245049ULL * frac +
+            971821376ULL * frac * frac +
+            5127ULL * frac * frac * frac +
+            (1ULL << 47)
+        ) >> 48);
+
+    arith_uint256 nextTarget =
+        refTarget * factor;
+
+    shifts -= 16;
+
+    if (shifts <= 0) {
+        nextTarget >>= -shifts;
+    } else {
+        const auto shifted =
+            nextTarget << shifts;
+
+        if ((shifted >> shifts) != nextTarget) {
+            nextTarget = powLimit;
+        } else {
+            nextTarget = shifted;
+        }
+    }
+
+    if (nextTarget == 0) {
+        nextTarget = arith_uint256{1};
+    } else if (nextTarget > powLimit) {
+        nextTarget = powLimit;
+    }
+
+    return nextTarget;
+}
+
+
+/**
+ * XNUVA main-chain difficulty adjustment.
+ *
+ * The absolute ASERT schedule is anchored to genesis.
+ * We use a virtual parent timestamp one target interval
+ * before genesis. Therefore a perfectly scheduled chain
+ * leaves the target unchanged from the genesis target.
+ *
+ * Mainnet parameters:
+ *   spacing   = 120 seconds
+ *   half-life = 43200 seconds (12 hours)
+ */
+unsigned int GetNextWorkRequired(
+    const CBlockIndex* pindexLast,
+    const CBlockHeader* pblock,
+    const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
-    // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
-    {
-        if (params.fPowAllowMinDifficultyBlocks)
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then it MUST be a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
-        }
+    if (params.fPowNoRetargeting) {
         return pindexLast->nBits;
     }
 
-    // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-    assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
-    assert(pindexFirst);
+    const arith_uint256 powLimit =
+        UintToArith256(params.powLimit);
 
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+    if (
+        params.fPowAllowMinDifficultyBlocks &&
+        pblock->GetBlockTime() >
+            pindexLast->GetBlockTime() +
+                2 * params.nPowTargetSpacing
+    ) {
+        return powLimit.GetCompact();
+    }
+
+    const CBlockIndex* genesis =
+        pindexLast->GetAncestor(0);
+
+    assert(genesis != nullptr);
+    assert(genesis->nHeight == 0);
+
+    arith_uint256 anchorTarget;
+    anchorTarget.SetCompact(genesis->nBits);
+
+    assert(anchorTarget > 0);
+    assert(anchorTarget <= powLimit);
+
+    constexpr int64_t XNUVA_ASERT_HALF_LIFE =
+        12 * 60 * 60;
+
+    const int64_t virtual_anchor_parent_time =
+        genesis->GetBlockTime() -
+        params.nPowTargetSpacing;
+
+    const int64_t time_diff =
+        pindexLast->GetBlockTime() -
+        virtual_anchor_parent_time;
+
+    const int64_t height_diff =
+        pindexLast->nHeight;
+
+    return CalculateASERT(
+        anchorTarget,
+        params.nPowTargetSpacing,
+        time_diff,
+        height_diff,
+        powLimit,
+        XNUVA_ASERT_HALF_LIFE
+    ).GetCompact();
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
@@ -86,53 +209,33 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 
 // Check that on difficulty adjustments, the new difficulty does not increase
 // or decrease beyond the permitted limits.
-bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
+bool PermittedDifficultyTransition(
+    const Consensus::Params& params,
+    int64_t height,
+    uint32_t old_nbits,
+    uint32_t new_nbits)
 {
-    if (params.fPowAllowMinDifficultyBlocks) return true;
+    (void)height;
+    (void)old_nbits;
 
-    if (height % params.DifficultyAdjustmentInterval() == 0) {
-        int64_t smallest_timespan = params.nPowTargetTimespan/4;
-        int64_t largest_timespan = params.nPowTargetTimespan*4;
-
-        const arith_uint256 pow_limit = UintToArith256(params.powLimit);
-        arith_uint256 observed_new_target;
-        observed_new_target.SetCompact(new_nbits);
-
-        // Calculate the largest difficulty value possible:
-        arith_uint256 largest_difficulty_target;
-        largest_difficulty_target.SetCompact(old_nbits);
-        largest_difficulty_target *= largest_timespan;
-        largest_difficulty_target /= params.nPowTargetTimespan;
-
-        if (largest_difficulty_target > pow_limit) {
-            largest_difficulty_target = pow_limit;
-        }
-
-        // Round and then compare this new calculated value to what is
-        // observed.
-        arith_uint256 maximum_new_target;
-        maximum_new_target.SetCompact(largest_difficulty_target.GetCompact());
-        if (maximum_new_target < observed_new_target) return false;
-
-        // Calculate the smallest difficulty value possible:
-        arith_uint256 smallest_difficulty_target;
-        smallest_difficulty_target.SetCompact(old_nbits);
-        smallest_difficulty_target *= smallest_timespan;
-        smallest_difficulty_target /= params.nPowTargetTimespan;
-
-        if (smallest_difficulty_target > pow_limit) {
-            smallest_difficulty_target = pow_limit;
-        }
-
-        // Round and then compare this new calculated value to what is
-        // observed.
-        arith_uint256 minimum_new_target;
-        minimum_new_target.SetCompact(smallest_difficulty_target.GetCompact());
-        if (minimum_new_target > observed_new_target) return false;
-    } else if (old_nbits != new_nbits) {
-        return false;
+    if (params.fPowAllowMinDifficultyBlocks) {
+        return true;
     }
-    return true;
+
+    bool negative{false};
+    bool overflow{false};
+
+    arith_uint256 target;
+    target.SetCompact(
+        new_nbits,
+        &negative,
+        &overflow);
+
+    return
+        !negative &&
+        !overflow &&
+        target != 0 &&
+        target <= UintToArith256(params.powLimit);
 }
 
 // Bypasses the actual proof of work check during fuzz testing with a simplified validation checking whether

@@ -57,6 +57,7 @@
 #include <util/translation.h>
 #include <util/vector.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
@@ -384,14 +385,25 @@ TestChain100Setup::TestChain100Setup(
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
+    /*
+     * Temporary XNUV genesis may be newer than Bitcoin's historical
+     * deterministic unit-test clock.
+     */
+    const auto genesis_time{Params().GenesisBlock().Time()};
+
+    if (genesis_time >= NodeClock::now()) {
+        SetMockTime(
+            genesis_time + std::chrono::seconds{1});
+    }
+
     // Generate a 100-block chain:
     this->mineBlocks(COINBASE_MATURITY);
 
     {
         LOCK(::cs_main);
         assert(
-            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "0c8c5f79505775a0f6aed6aca2350718ceb9c6f2c878667864d5c7a6d8ffa2a6");
+            m_node.chainman->ActiveChain().Height()
+            == COINBASE_MATURITY);
     }
 }
 
@@ -422,7 +434,44 @@ CBlock TestChain100Setup::CreateBlock(
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    const CBlockIndex* pindex_prev{
+        WITH_LOCK(
+            ::cs_main,
+            return m_node.chainman->m_blockman.LookupBlockIndex(
+                block.hashPrevBlock))
+    };
+
+    if (pindex_prev == nullptr) {
+        throw std::runtime_error{
+            "RandomX TestChain100 previous block unavailable"};
+    }
+
+    while (true) {
+        const auto result{
+            xnuva::ValidateProofOfWork(
+                block,
+                pindex_prev,
+                m_node.chainman->GetConsensus(),
+                m_node.chainman->m_blockman.RandomXContexts())
+        };
+
+        if (result == xnuva::PoWValidationResult::VALID) {
+            break;
+        }
+
+        if (result ==
+            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            throw std::runtime_error{
+                "RandomX TestChain100 seed unavailable"};
+        }
+
+        ++block.nNonce;
+
+        if (block.nNonce == 0) {
+            throw std::runtime_error{
+                "RandomX TestChain100 nonce exhausted"};
+        }
+    }
 
     return block;
 }
@@ -438,7 +487,14 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 
     CBlock block = this->CreateBlock(txns, scriptPubKey, *chainstate);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    if (!Assert(m_node.chainman)->ProcessNewBlock(
+            shared_pblock,
+            true,
+            true,
+            nullptr)) {
+        throw std::runtime_error{
+            "RandomX TestChain100 block rejected"};
+    }
 
     return block;
 }

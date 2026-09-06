@@ -16,6 +16,7 @@
 #include <test/util/setup_common.h>
 #include <util/time.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
 #include <validationinterface.h>
 
 #include <thread>
@@ -100,7 +101,25 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
-    while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+    while (true) {
+        const auto result{
+            xnuva::ValidateProofOfWork(
+                *pblock,
+                prev_block,
+                Params().GetConsensus(),
+                m_node.chainman->m_blockman.RandomXContexts())
+        };
+
+        if (result == xnuva::PoWValidationResult::VALID) {
+            break;
+        }
+
+        if (result ==
+            xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE) {
+            BOOST_FAIL(
+                "RandomX validation-block seed unavailable");
+        }
+
         ++(pblock->nNonce);
     }
 
