@@ -124,6 +124,7 @@ add_executable(test_bitcoin
   txvalidation_tests.cpp
   txvalidationcache_tests.cpp
   uint256_tests.cpp
+  xnuva_randomx_tests.cpp
   util_check_tests.cpp
   util_expected_tests.cpp
   util_string_tests.cpp
@@ -163,6 +164,7 @@ target_link_libraries(test_bitcoin
   bitcoin_cli
   bitcoin_node
   bitcoin_consensus
+  xnuva_randomx
   minisketch
   secp256k1
   Boost::headers

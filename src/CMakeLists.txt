@@ -19,6 +19,9 @@ include(../cmake/crc32c.cmake)
 include(../cmake/leveldb.cmake)
 include(../cmake/minisketch.cmake)
 add_subdirectory(univalue)
+
+# Xnuva: exact pinned RandomX v2.0.1 git-archive export.
+add_subdirectory(randomx EXCLUDE_FROM_ALL)
 if (ENABLE_IPC AND NOT WITH_EXTERNAL_LIBMULTIPROCESS)
   include(../cmake/libmultiprocess.cmake)
   add_libmultiprocess(ipc/libmultiprocess)
@@ -54,6 +57,21 @@ add_dependencies(bitcoin_clientversion generate_build_info)
 
 add_subdirectory(crypto)
 add_subdirectory(util)
+
+# Portable RandomX v2 correctness/reference layer.
+# Consensus validation does not use this target yet.
+add_library(xnuva_randomx STATIC EXCLUDE_FROM_ALL
+  xnuva/randomx.cpp
+)
+target_include_directories(xnuva_randomx
+  PRIVATE
+    ${RANDOMX_INCLUDE}
+)
+target_link_libraries(xnuva_randomx
+  PRIVATE
+    core_interface
+    randomx
+)
 if(ENABLE_IPC)
   add_subdirectory(ipc)
 endif()
