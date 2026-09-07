@@ -1,5 +1,9 @@
 # XNUVA Mainnet Launch
 
+<p align="center">
+  <img src="doc/assets/xnuva-coin.png" alt="Xnuva XNUV coin" width="160">
+</p>
+
 XNUV mainnet was operationally confirmed on 2026-09-06T21:28:19+01:00.
 
 ## Immutable Launch Source
@@ -12,8 +16,7 @@ Launch source commit:
 
 `0d669d42e9810e0f5681d8b315a2bb1711265eb2`
 
-The immutable tag remains permanently attached to the exact source that
-created and validated block 1.
+The immutable tag remains permanently attached to the exact source that created and validated block 1.
 
 ## Permanent Genesis
 
@@ -47,16 +50,18 @@ created and validated block 1.
 
 The original RPC assignment used P2P+1.
 
-Bitcoin Core reserves P2P+1 for its automatic local onion-service listener,
-so the RPC family was moved to separate 295xx ports in the first
-post-launch operational commit:
+The automatic local onion-service listener reserves P2P+1, so the RPC family was moved to separate 295xx ports in the first post-launch operational commit:
 
 `77be8629432d4d41fa397ab8cf8552ae4e6a3309`
 
 This does not alter consensus, genesis, block 1 or the immutable launch tag.
 
+## Official artwork
+
+The XNUV coin artwork used for Xnuva project branding is stored at [doc/assets/xnuva-coin.png](doc/assets/xnuva-coin.png).
+
 ## Development Rule
 
 The genesis and immutable launch tag must never be rewritten.
 
-All later development proceeds through ordinary commits on GitHub main.
+All later development proceeds through ordinary forward commits on GitHub `main`.

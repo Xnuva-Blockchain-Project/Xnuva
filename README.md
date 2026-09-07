@@ -1,5 +1,9 @@
 # Xnuva Core
 
+<p align="center">
+  <img src="doc/assets/xnuva-coin.png" alt="Xnuva XNUV coin" width="160">
+</p>
+
 **Xnuva (XNUV)** is an independent Layer-1, Bitcoin-style UTXO blockchain using **RandomX v2 Proof of Work** and **ASERT difficulty adjustment**.
 
 Xnuva Core is derived from the Bitcoin Core codebase, but Xnuva is a separate network with its own genesis block, consensus parameters, monetary policy, addresses, ports and chain history.
@@ -52,7 +56,7 @@ Genesis statement:
 - URI scheme: **xnuva:**
 - P2P message magic: `e3 fc a7 92`
 
-At launch there are **no DNS or fixed seed nodes**. Until seed infrastructure is added, additional nodes must connect using a known peer, for example:
+At launch there are **no DNS or fixed seed nodes**. Until seed infrastructure is added, additional nodes must connect using a known peer:
 
 ```ini
 addnode=<node-ip>:29444
@@ -64,7 +68,7 @@ A normal build produces the Xnuva executables:
 
 - `xnuvad`
 - `xnuva-cli`
-- `xnuva-qt` / `xnuva` where GUI support is enabled
+- `xnuva` (GUI where GUI support is enabled)
 - `xnuva-wallet`
 - `xnuva-tx`
 - `xnuva-util`
@@ -77,7 +81,7 @@ Xnuva Core is currently intended primarily for developers and experienced node o
 
 Platform-specific build documentation is available in the [doc directory](doc/).
 
-The project is still in early mainnet development. Test cleanup, public seed infrastructure, release packaging and easy installers are continuing after launch.
+The project is in early mainnet development. Test cleanup, public seed infrastructure, release packaging and easy installers continue as forward Git commits.
 
 ## Launch documentation
 
@@ -86,6 +90,10 @@ The exact launch state and immutable chain identity are recorded in:
 - [XNUVA-LAUNCH-STATE.md](XNUVA-LAUNCH-STATE.md)
 - [XNUVA-MAINNET-LAUNCH.md](XNUVA-MAINNET-LAUNCH.md)
 - [XNUVA-POST-LAUNCH.md](XNUVA-POST-LAUNCH.md)
+
+## Branding
+
+The XNUV coin artwork used by the project is stored at [doc/assets/xnuva-coin.png](doc/assets/xnuva-coin.png).
 
 ## Development policy
 

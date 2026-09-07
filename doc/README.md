@@ -1,45 +1,42 @@
-Bitcoin Core
-=============
+# Xnuva Core Documentation
 
-Setup
----------------------
-Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires several hundred gigabytes or more of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to several days or more.
+This directory contains build, operation, protocol and developer documentation for **Xnuva Core (XNUV)**.
 
-To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/download/).
+Xnuva Core is derived from the Bitcoin Core codebase, so a number of lower-level documents retain upstream terminology where the implementation remains inherited. Those documents should be read as technical implementation references for Xnuva Core; they do **not** mean that Xnuva is the Bitcoin network.
 
-Running
----------------------
-The following are some helpful notes on how to run Bitcoin Core on your native platform.
+## Mainnet quick reference
 
-### Unix
+- Proof of Work: RandomX v2 from block 1
+- Block identity: SHA256d
+- Target spacing: 120 seconds
+- Difficulty adjustment: ASERT
+- ASERT half-life: 43,200 seconds
+- P2P port: 29444
+- RPC port: 29544
+- Bech32 HRP: `xnuva`
+- Configuration file: `xnuva.conf`
+- Default data directory: `.xnuva`
 
-Unpack the files into a directory and run:
+At launch, Xnuva has no DNS or fixed seed nodes. A fresh node therefore needs a known peer, for example:
 
-- `bin/bitcoin-qt` (GUI) or
-- `bin/bitcoind` (headless)
-- `bin/bitcoin` (wrapper command)
+```ini
+addnode=<node-ip>:29444
+```
 
-The `bitcoin` command supports subcommands like `bitcoin gui`, `bitcoin node`, and `bitcoin rpc` exposing different functionality. Subcommands can be listed with `bitcoin help`.
+## Running Xnuva Core
 
-### Windows
+Depending on how Xnuva Core was built, the principal executables are:
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+- `xnuva` — graphical client where GUI support is enabled
+- `xnuvad` — headless full node
+- `xnuva-cli` — RPC command-line client
+- `xnuva-wallet`
+- `xnuva-tx`
+- `xnuva-util`
 
-### macOS
+## Building
 
-Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
-
-### Need Help?
-
-* See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
-for help and more information.
-* Ask for help on [Bitcoin StackExchange](https://bitcoin.stackexchange.com).
-* Ask for help on #bitcoin on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#bitcoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
-
-Building
----------------------
-The following are developer notes on how to build Bitcoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following build notes originate from the upstream codebase and remain useful while Xnuva-specific packaging is being completed:
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
@@ -49,46 +46,44 @@ The following are developer notes on how to build Bitcoin Core on your native pl
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
 
-Development
----------------------
-The Bitcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+Some commands, binary names or external links inside individual inherited documents may still reference Bitcoin Core and are being reviewed progressively. The root [Xnuva README](/README.md) and Xnuva launch documents are authoritative for Xnuva-specific identity and network parameters.
+
+## Development references
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://doxygen.bitcoincore.org/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
 - [JSON-RPC Interface](JSON-RPC-interface.md)
 - [Unauthenticated REST Interface](REST-interface.md)
-- [BIPS](bips.md)
-- [Dnsseed Policy](dnsseed-policy.md)
+- [BIPs inherited by the codebase](bips.md)
+- [DNS seed policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
 - [Internal Design Docs](design/)
 
-### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #bitcoin-core-dev on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev).
+## Node and wallet references
 
-### Miscellaneous
-- [Assets Attribution](assets-attribution.md)
-- [bitcoin.conf Configuration File](bitcoin-conf.md)
-- [CJDNS Support](cjdns.md)
+- [Configuration File Reference](bitcoin-conf.md)
 - [Files](files.md)
-- [Fuzz-testing](fuzzing.md)
-- [I2P Support](i2p.md)
-- [Init Scripts (systemd/upstart/openrc)](init.md)
 - [Managing Wallets](managing-wallets.md)
 - [Multisig Tutorial](multisig-tutorial.md)
 - [Offline Signing Tutorial](offline-signing-tutorial.md)
-- [P2P bad ports definition and list](p2p-bad-ports.md)
-- [PSBT support](psbt.md)
+- [PSBT Support](psbt.md)
 - [Reduce Memory](reduce-memory.md)
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [Transaction Relay Policy](policy/README.md)
 - [ZMQ](zmq.md)
 
-License
----------------------
-Distributed under the [MIT software license](/COPYING).
+The file name `bitcoin-conf.md` is inherited upstream; Xnuva's actual configuration file is `xnuva.conf`.
+
+## Mainnet launch records
+
+- [Launch State](/XNUVA-LAUNCH-STATE.md)
+- [Mainnet Launch](/XNUVA-MAINNET-LAUNCH.md)
+- [Post-Launch Development](/XNUVA-POST-LAUNCH.md)
+
+## License
+
+Distributed under the [MIT software license](/COPYING), retaining applicable upstream copyright and attribution notices.

@@ -2,14 +2,24 @@
 
 \section intro_sec Introduction
 
-This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin,
-which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried out collectively by the network.
+This is the developer documentation for Xnuva Core, the reference implementation
+of the independent Xnuva (XNUV) Layer-1 blockchain.
 
-The software is a community-driven open source project, released under the MIT license.
+Xnuva uses a Bitcoin-style UTXO model, RandomX v2 Proof of Work from block 1,
+SHA256d block identity, a 120-second target spacing, and ASERT difficulty
+adjustment.
 
-See https://github.com/bitcoin/bitcoin and https://bitcoincore.org/ for further information about the project.
+Xnuva Core is derived from the Bitcoin Core codebase and retains applicable
+upstream copyright notices and MIT-license attribution. Xnuva is a separate
+network with its own genesis block, chain history, monetary policy, addresses,
+ports, and consensus parameters.
+
+Project repository:
+https://github.com/Xnuva-Blockchain-Project/Xnuva
 
 \section Navigation
-Use <a href="modules.html"><code>Modules</code></a>, <a href="namespaces.html"><code>Namespaces</code></a>, <a href="classes.html"><code>Classes</code></a>, or <a href="files.html"><code>Files</code></a> at the top of the page to start navigating the code.
-
+Use <a href="modules.html"><code>Modules</code></a>,
+<a href="namespaces.html"><code>Namespaces</code></a>,
+<a href="classes.html"><code>Classes</code></a>, or
+<a href="files.html"><code>Files</code></a> at the top of the page to start
+navigating the code.

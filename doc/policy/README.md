@@ -1,15 +1,13 @@
-# Transaction Relay Policy
+# Xnuva Core Transaction Relay Policy
 
-**Policy** (Mempool or Transaction Relay Policy) is the node's set of validation rules, in addition
-to consensus, enforced for unconfirmed transactions before submitting them to the mempool. These
-rules are local to the node and configurable, see "Node relay options" when running `-help`.
-Policy may include restrictions on the transaction itself, the transaction
-in relation to the current chain tip, and the transaction in relation to the node's mempool
-contents. Policy is *not* applied to transactions in blocks.
+This directory documents **Xnuva Core** mempool and transaction-relay policy.
+
+Policy rules are local node rules applied in addition to consensus when evaluating unconfirmed transactions before they enter the mempool or are relayed to peers. They are not consensus rules and are not applied to transactions already contained in blocks.
+
+Much of this policy architecture is inherited from the upstream Bitcoin Core codebase and remains applicable to Xnuva Core unless Xnuva-specific code or documentation states otherwise.
 
 This documentation is not an exhaustive list of all policy rules.
 
 - [Mempool Design and Limits](mempool-design.md)
 - [Mempool Replacements](mempool-replacements.md)
 - [Packages](packages.md)
-
