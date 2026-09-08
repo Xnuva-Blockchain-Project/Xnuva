@@ -12,7 +12,7 @@ The unit name is invariant in normal usage: for example, `1 Prince`, `2 Prince`,
 
 ## Memorial
 
-The name **Prince** was adopted on **8 September 2026** in memory of **Prince**.
+The name **Prince** was adopted on **8 September 2026** in memory of **Prince the American Akita**.
 
 The intention is for Prince to remain a permanent part of Xnuva terminology: the smallest unit of XNUV carries his name.
 

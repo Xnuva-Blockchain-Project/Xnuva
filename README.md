@@ -57,7 +57,7 @@ The smallest indivisible denomination of XNUV is officially named **Prince**.
 - **100,000,000 Prince = 1 XNUV**
 - The unit name is invariant in normal usage: for example, `1 Prince` and `250 Prince`.
 
-Prince is named in memory of **Prince**. The naming is a terminology and display convention only; it does not change XNUV precision, monetary policy, serialized amounts, balances, or consensus rules.
+Prince is named in memory of **Prince the American Akita**. The naming is a terminology and display convention only; it does not change XNUV precision, monetary policy, serialized amounts, balances, or consensus rules.
 
 See [Prince — XNUV Atomic Unit](doc/prince-denomination.md).
 

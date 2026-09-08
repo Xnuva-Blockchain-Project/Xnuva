@@ -4,7 +4,7 @@ XNUV development now proceeds through normal GitHub commits.
 
 ## Official atomic-unit name
 
-On **8 September 2026**, the existing XNUV atomic unit was formally named **Prince**, in memory of Prince.
+On **8 September 2026**, the existing XNUV atomic unit was formally named **Prince**, in memory of **Prince the American Akita**.
 
 - 1 Prince = 0.00000001 XNUV
 - 100,000,000 Prince = 1 XNUV

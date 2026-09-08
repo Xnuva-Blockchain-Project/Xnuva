@@ -45,7 +45,7 @@ The smallest indivisible XNUV denomination is officially named **Prince**.
 - 1 Prince = 0.00000001 XNUV
 - 100,000,000 Prince = 1 XNUV
 
-The name was adopted after launch in memory of **Prince**. This naming does not alter the immutable launch source, genesis, block 1, monetary precision, balances, supply, or consensus rules.
+The name was adopted after launch in memory of **Prince the American Akita**. This naming does not alter the immutable launch source, genesis, block 1, monetary precision, balances, supply, or consensus rules.
 
 See [Prince — XNUV Atomic Unit](doc/prince-denomination.md).
 
