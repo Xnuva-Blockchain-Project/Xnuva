@@ -10,7 +10,7 @@
 
 #include <cassert>
 
-static constexpr auto MAX_DIGITS_BTC = 16;
+static constexpr auto MAX_DIGITS_XNUV = 16;
 
 BitcoinUnits::BitcoinUnits(QObject *parent):
         QAbstractListModel(parent),
@@ -31,10 +31,10 @@ QList<BitcoinUnit> BitcoinUnits::availableUnits()
 QString BitcoinUnits::longName(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return QString("BTC");
-    case Unit::mBTC: return QString("mBTC");
-    case Unit::uBTC: return QString::fromUtf8("µBTC (bits)");
-    case Unit::SAT: return QString("Satoshi (sat)");
+    case Unit::BTC: return QString("XNUV");
+    case Unit::mBTC: return QString("mXNUV");
+    case Unit::uBTC: return QString::fromUtf8("µXNUV");
+    case Unit::SAT: return QString("Prince");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -44,8 +44,8 @@ QString BitcoinUnits::shortName(Unit unit)
     switch (unit) {
     case Unit::BTC: return longName(unit);
     case Unit::mBTC: return longName(unit);
-    case Unit::uBTC: return QString("bits");
-    case Unit::SAT: return QString("sat");
+    case Unit::uBTC: return QString::fromUtf8("µXNUV");
+    case Unit::SAT: return QString("Prince");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -53,10 +53,10 @@ QString BitcoinUnits::shortName(Unit unit)
 QString BitcoinUnits::description(Unit unit)
 {
     switch (unit) {
-    case Unit::BTC: return QString("Bitcoins");
-    case Unit::mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case Unit::uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case Unit::SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case Unit::BTC: return QString("XNUV");
+    case Unit::mBTC: return QString("Milli-XNUV (1 / 1" THIN_SP_UTF8 "000 XNUV)");
+    case Unit::uBTC: return QString::fromUtf8("Micro-XNUV (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000 XNUV)");
+    case Unit::SAT: return QString("Prince (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000 XNUV)");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -94,7 +94,7 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
     if (justify) {
-        quotient_str = quotient_str.rightJustified(MAX_DIGITS_BTC - num_decimals, ' ');
+        quotient_str = quotient_str.rightJustified(MAX_DIGITS_XNUV - num_decimals, ' ');
     }
 
     // Use SI-style thin space separators as these are locale independent and can't be

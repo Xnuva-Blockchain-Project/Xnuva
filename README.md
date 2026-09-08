@@ -35,6 +35,8 @@ The launch tag is permanent and must not be moved or rewritten.
 | Halving interval | 1,000,000 reward-bearing blocks |
 | Coinbase maturity | 100 blocks |
 | Amount precision | 8 decimals |
+| Smallest denomination | **Prince** |
+| 1 Prince | 0.00000001 XNUV |
 | `MAX_MONEY` | 50,000,000 XNUV |
 | Premine | None |
 | Founder/developer allocation | None |
@@ -46,6 +48,18 @@ The launch tag is permanent and must not be moved or rewritten.
 Genesis statement:
 
 > Xnuva begins: an open chain, fair issuance, no privileged allocation.
+
+## Denominations
+
+The smallest indivisible denomination of XNUV is officially named **Prince**.
+
+- **1 Prince = 0.00000001 XNUV**
+- **100,000,000 Prince = 1 XNUV**
+- The unit name is invariant in normal usage: for example, `1 Prince` and `250 Prince`.
+
+Prince is named in memory of **Prince**. The naming is a terminology and display convention only; it does not change XNUV precision, monetary policy, serialized amounts, balances, or consensus rules.
+
+See [Prince — XNUV Atomic Unit](doc/prince-denomination.md).
 
 ## Mainnet network identity
 

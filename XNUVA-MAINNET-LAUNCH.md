@@ -38,6 +38,17 @@ The immutable tag remains permanently attached to the exact source that created 
 - Difficulty adjustment: ASERT
 - Target spacing: 120 seconds
 
+## Official XNUV Atomic Unit
+
+The smallest indivisible XNUV denomination is officially named **Prince**.
+
+- 1 Prince = 0.00000001 XNUV
+- 100,000,000 Prince = 1 XNUV
+
+The name was adopted after launch in memory of **Prince**. This naming does not alter the immutable launch source, genesis, block 1, monetary precision, balances, supply, or consensus rules.
+
+See [Prince — XNUV Atomic Unit](doc/prince-denomination.md).
+
 ## Initial Mainnet Node
 
 - Main P2P port: 29444

@@ -14,6 +14,8 @@ Xnuva Core is derived from the Bitcoin Core codebase, so a number of lower-level
 - P2P port: 29444
 - RPC port: 29544
 - Bech32 HRP: `xnuva`
+- Smallest denomination: **Prince**
+- 1 Prince: `0.00000001 XNUV`
 - Configuration file: `xnuva.conf`
 - Default data directory: `.xnuva`
 
@@ -22,6 +24,15 @@ At launch, Xnuva has no DNS or fixed seed nodes. A fresh node therefore needs a 
 ```ini
 addnode=<node-ip>:29444
 ```
+
+## XNUV denominations
+
+The official atomic unit is **Prince**:
+
+- 1 Prince = 0.00000001 XNUV
+- 100,000,000 Prince = 1 XNUV
+
+See [Prince — XNUV Atomic Unit](prince-denomination.md) for the permanent terminology record.
 
 ## Running Xnuva Core
 

@@ -9,6 +9,11 @@ Xnuva uses a Bitcoin-style UTXO model, RandomX v2 Proof of Work from block 1,
 SHA256d block identity, a 120-second target spacing, and ASERT difficulty
 adjustment.
 
+XNUV has eight decimal places. Its smallest indivisible denomination is
+officially named **Prince**: one Prince equals 0.00000001 XNUV, and
+100,000,000 Prince equals one XNUV. The name is a display and terminology
+convention and does not alter consensus amount precision.
+
 Xnuva Core is derived from the Bitcoin Core codebase and retains applicable
 upstream copyright notices and MIT-license attribution. Xnuva is a separate
 network with its own genesis block, chain history, monetary policy, addresses,
