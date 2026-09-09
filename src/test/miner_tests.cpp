@@ -22,6 +22,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <xnuva/pow_validation.h>
 #include <versionbits.h>
 #include <pow.h>
 
@@ -40,6 +41,19 @@ using node::BlockAssembler;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
+    // This inherited miner fixture exercises pre-BIP68/CSV behavior.
+    // Keep XNUV RandomX regtest difficulty, but delay CSV only inside
+    // this isolated unit-test fixture.
+    MinerTestingSetup()
+        : TestingSetup{
+              ChainType::REGTEST,
+              TestOpts{
+                  .extra_args = {
+                      "-testactivationheight=csv@999999",
+                  },
+              }}
+    {
+    }
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
@@ -76,6 +90,7 @@ struct MinerTestingSetup : public TestingSetup {
 BOOST_FIXTURE_TEST_SUITE(miner_tests, MinerTestingSetup)
 
 static CFeeRate blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
+static constexpr CAmount XNUV_TEST_BLOCK_SUBSIDY = 25 * COIN;
 
 constexpr static struct {
     unsigned int extranonce;
@@ -147,7 +162,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vin[0].prevout.hash = txFirst[0]->GetHash();
     tx.vin[0].prevout.n = 0;
     tx.vout.resize(1);
-    tx.vout[0].nValue = 5000000000LL - 1000;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
     const auto parent_tx{entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
@@ -155,14 +170,14 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
-    tx.vout[0].nValue = 5000000000LL - 10000;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
     const auto medium_fee_tx{entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
     TryAddToMempool(tx_mempool, medium_fee_tx);
 
     // This tx has a high fee, but depends on the first transaction
     tx.vin[0].prevout.hash = hashParentTx;
-    tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k satoshi fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 1000 - 50000; // 50k satoshi fee
     Txid hashHighFeeTx = tx.GetHash();
     const auto high_fee_tx{entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
     TryAddToMempool(tx_mempool, high_fee_tx);
@@ -192,7 +207,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
-    tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 0 fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 1000 - 50000; // 0 fee
     Txid hashFreeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(0).FromTx(tx));
     uint64_t freeTxSize{::GetSerializeSize(TX_WITH_WITNESS(tx))};
@@ -202,7 +217,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     CAmount feeToUse = blockMinFeeRate.GetFee(2*freeTxSize) - 1;
 
     tx.vin[0].prevout.hash = hashFreeTx;
-    tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 1000 - 50000 - feeToUse;
     Txid hashLowFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
 
@@ -225,8 +240,11 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     hashLowFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
 
-    // waitNext() should return if fees for the new template are at least 1 sat up
-    block_template = block_template->waitNext({.fee_threshold = 1});
+    // waitNext() should return immediately if the fee-trigger condition is satisfied.
+    block_template = block_template->waitNext({
+        .timeout = MillisecondsDouble{0},
+        .fee_threshold = 1,
+    });
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
@@ -238,7 +256,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // Add a 0-fee transaction that has 2 outputs.
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vout.resize(2);
-    tx.vout[0].nValue = 5000000000LL - 100000000;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 100000000;
     tx.vout[1].nValue = 100000000; // 1BTC output
     // Increase size to avoid rounding errors: when the feerate is extremely small (i.e. 1sat/kvB), evaluating the fee
     // at smaller sizes gives us rounded values that are equal to each other, which means we incorrectly include
@@ -251,7 +269,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vin[0].prevout.hash = hashFreeTx2;
     tx.vout.resize(1);
     feeToUse = blockMinFeeRate.GetFee(freeTxSize);
-    tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 100000000 - feeToUse;
     Txid hashLowFeeTx2 = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
@@ -326,7 +344,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     entry.nFee = 11;
     entry.nHeight = 11;
 
-    const CAmount BLOCKSUBSIDY = 50 * COIN;
+    const CAmount BLOCKSUBSIDY = XNUV_TEST_BLOCK_SUBSIDY;
     const CAmount LOWFEE = CENT;
     const CAmount HIGHFEE = COIN;
     const CAmount HIGHERFEE = 4 * COIN;
@@ -677,28 +695,28 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     tx.vin[0].prevout.n = 0;
     tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vout.resize(1);
-    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY; // 0 fee
     Txid hashFreePrioritisedTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(0).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreePrioritisedTx, 5 * COIN);
 
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].prevout.n = 0;
-    tx.vout[0].nValue = 5000000000LL - 1000;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
     TryAddToMempool(tx_mempool, entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
-    tx.vout[0].nValue = 5000000000LL - 10000;
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashMediumFeeTx, -5 * COIN);
 
     // This tx also has a low fee, but is prioritised
     tx.vin[0].prevout.hash = hashParentTx;
-    tx.vout[0].nValue = 5000000000LL - 1000 - 1000; // 1000 satoshi fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY - 1000 - 1000; // 1000 satoshi fee
     Txid hashPrioritsedChild = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashPrioritsedChild, 2 * COIN);
@@ -710,19 +728,19 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     // FreeParent's prioritisation should not be included in that entry.
     // When FreeChild is included, FreeChild's prioritisation should also not be included.
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
-    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY; // 0 fee
     Txid hashFreeParent = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreeParent, 10 * COIN);
 
     tx.vin[0].prevout.hash = hashFreeParent;
-    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY; // 0 fee
     Txid hashFreeChild = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
     tx_mempool.PrioritiseTransaction(hashFreeChild, 1 * COIN);
 
     tx.vin[0].prevout.hash = hashFreeChild;
-    tx.vout[0].nValue = 5000000000LL; // 0 fee
+    tx.vout[0].nValue = XNUV_TEST_BLOCK_SUBSIDY; // 0 fee
     Txid hashFreeGrandchild = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
 
@@ -779,10 +797,36 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         }
 
         {
-            // A block template does not have proof-of-work, but it might pass
-            // verification by coincidence. Grind the nonce if needed:
-            while (CheckProofOfWork(block.GetHash(), block.nBits, Assert(m_node.chainman)->GetParams().GetConsensus())) {
-                block.nNonce++;
+            // A block template does not have XNUV RandomX proof-of-work.
+            // Ensure this particular test header is RandomX-invalid before
+            // asking checkBlock() to verify the expected rejection path.
+            const CBlockIndex* pindex_prev{
+                WITH_LOCK(
+                    ::cs_main,
+                    return Assert(m_node.chainman)->m_blockman.LookupBlockIndex(
+                        block.hashPrevBlock))
+            };
+            BOOST_REQUIRE(pindex_prev != nullptr);
+
+            while (true) {
+                const auto result{
+                    xnuva::ValidateProofOfWork(
+                        block,
+                        pindex_prev,
+                        Assert(m_node.chainman)->GetConsensus(),
+                        Assert(m_node.chainman)->m_blockman.RandomXContexts())
+                };
+
+                BOOST_REQUIRE(
+                    result !=
+                    xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE);
+
+                if (result != xnuva::PoWValidationResult::VALID) {
+                    break;
+                }
+
+                ++block.nNonce;
+                BOOST_REQUIRE(block.nNonce != 0);
             }
 
             std::string reason;
@@ -819,7 +863,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             block.nTime = Assert(m_node.chainman)->ActiveChain().Tip()->GetMedianTimePast()+1;
             txCoinbase.version = 1;
             txCoinbase.vin[0].scriptSig = CScript{} << (current_height + 1) << bi.extranonce;
-            txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
+            // Preserve the SegWit commitment output produced by
+            // CreateNewBlock(). The inherited Bitcoin test removed it because
+            // its hard-coded SHA256d nonces depended on the old transaction
+            // layout. XNUV grinds the actual RandomX proof below, so removing
+            // the commitment would leave witness data without its commitment.
+            BOOST_REQUIRE(!txCoinbase.vout.empty());
             txCoinbase.vout[0].scriptPubKey = CScript();
             block.vtx[0] = MakeTransactionRef(txCoinbase);
             if (txFirst.size() == 0)
@@ -827,8 +876,42 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             if (txFirst.size() < 4)
                 txFirst.push_back(block.vtx[0]);
             block.hashMerkleRoot = BlockMerkleRoot(block);
-            block.nNonce = bi.nonce;
+
+            // BLOCKINFO contains historical Bitcoin SHA256d nonces. XNUV uses
+            // RandomX from block 1, so start from a deterministic nonce and
+            // grind the actual XNUV proof of work for this test block.
+            block.nNonce = 0;
         }
+
+        const CBlockIndex* pindex_prev{
+            WITH_LOCK(
+                ::cs_main,
+                return Assert(m_node.chainman)->m_blockman.LookupBlockIndex(
+                    block.hashPrevBlock))
+        };
+        BOOST_REQUIRE(pindex_prev != nullptr);
+
+        while (true) {
+            const auto result{
+                xnuva::ValidateProofOfWork(
+                    block,
+                    pindex_prev,
+                    Assert(m_node.chainman)->GetConsensus(),
+                    Assert(m_node.chainman)->m_blockman.RandomXContexts())
+            };
+
+            if (result == xnuva::PoWValidationResult::VALID) {
+                break;
+            }
+
+            BOOST_REQUIRE(
+                result !=
+                xnuva::PoWValidationResult::CONTEXT_UNAVAILABLE);
+
+            ++block.nNonce;
+            BOOST_REQUIRE(block.nNonce != 0);
+        }
+
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
         // Alternate calls between Chainman's ProcessNewBlock and submitSolution
         // via the Mining interface. The former is used by net_processing as well
@@ -859,7 +942,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     TestBasicMining(scriptPubKey, txFirst, baseheight);
 
     m_node.chainman->ActiveChain().Tip()->nHeight--;
-    SetMockTime(0);
+
+    // On regtest, waitNext() may return a minimum-difficulty template if
+    // the tip appears more than 20 minutes old. This inherited package
+    // selection check expects the empty-mempool timeout path instead, so
+    // keep mock time adjacent to the current tip for this test only.
+    SetMockTime(
+        m_node.chainman->ActiveChain().Tip()->GetBlockTime() + 1);
 
     TestPackageSelection(scriptPubKey, txFirst);
 
