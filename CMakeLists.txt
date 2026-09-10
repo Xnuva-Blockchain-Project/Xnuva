@@ -52,8 +52,8 @@ set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
 
 project(XnuvaCore
   VERSION ${CLIENT_VERSION_MAJOR}.${CLIENT_VERSION_MINOR}.${CLIENT_VERSION_BUILD}
-  DESCRIPTION "Xnuva client software"
-  HOMEPAGE_URL "https://xnuva.com/"
+  DESCRIPTION "Xnuva Blockchain Project client software"
+  HOMEPAGE_URL "https://europazeus.org/"
   LANGUAGES NONE
 )
 
@@ -63,8 +63,9 @@ if(CLIENT_VERSION_RC GREATER 0)
 endif()
 
 set(COPYRIGHT_HOLDERS "The %s developers")
-set(COPYRIGHT_HOLDERS_FINAL "The ${CLIENT_NAME} developers")
-set(CLIENT_BUGREPORT "https://xnuva.com/")
+set(COPYRIGHT_HOLDERS_SUBSTITUTION "Xnuva Blockchain Project")
+set(COPYRIGHT_HOLDERS_FINAL "The Xnuva Blockchain Project developers")
+set(CLIENT_BUGREPORT "https://europazeus.org/")
 
 #=============================
 # Language setup
