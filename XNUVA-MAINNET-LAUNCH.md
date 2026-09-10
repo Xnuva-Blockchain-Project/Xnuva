@@ -54,7 +54,7 @@ See [Prince — XNUV Atomic Unit](doc/prince-denomination.md).
 - Main P2P port: 29444
 - Automatic local onion listener: 29445
 - Main RPC port: 29544
-- Datadir: `/home/meadcrown/XNUVA-Blockchain/mainnet-live`
+- Datadir: `<operator-defined-mainnet-datadir>`
 - Height at operational confirmation: 1
 
 ## Post-Launch Port Correction

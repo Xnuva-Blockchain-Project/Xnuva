@@ -8,6 +8,10 @@
 
 Xnuva Core is derived from the Bitcoin Core codebase, but Xnuva is a separate network with its own genesis block, consensus parameters, monetary policy, addresses, ports and chain history.
 
+Official project website: **https://europazeus.org/**
+
+Current client release: **Xnuva Core v0.1.0**.
+
 ## Mainnet status
 
 XNUV mainnet launched on **6 September 2026**.
@@ -82,7 +86,7 @@ A normal build produces the Xnuva executables:
 
 - `xnuvad`
 - `xnuva-cli`
-- `xnuva` (GUI where GUI support is enabled)
+- `xnuva-qt` (GUI where GUI support is enabled)
 - `xnuva-wallet`
 - `xnuva-tx`
 - `xnuva-util`
@@ -95,7 +99,7 @@ Xnuva Core is currently intended primarily for developers and experienced node o
 
 Platform-specific build documentation is available in the [doc directory](doc/).
 
-The project is in early mainnet development. Test cleanup, public seed infrastructure, release packaging and easy installers continue as forward Git commits.
+Xnuva Core v0.1.0 is the first qualified client release. Public seed infrastructure and additional platform installers continue as forward Git commits.
 
 ## Launch documentation
 
