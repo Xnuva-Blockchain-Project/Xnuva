@@ -24,7 +24,7 @@ Deferred work:
 - Linux packages.
 - macOS installer.
 - Explorer.
-- Mining documentation/tooling.
+- Expand mining documentation/tooling beyond the initial Linux helper.
 - Wallet backup/recovery documentation.
 - CI and reproducible releases.
 

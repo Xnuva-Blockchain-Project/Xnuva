@@ -21,6 +21,9 @@
 # Previous releases
 /releases
 
+# Local miner reward-address state
+/mining-address.txt
+
 # cargo default target dir
 target/
 

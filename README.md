@@ -93,6 +93,47 @@ A normal build produces the Xnuva executables:
 
 The default data directory is `.xnuva` and the primary configuration file is `xnuva.conf`.
 
+## Mining
+
+The repository now includes `miner.sh`, a Linux helper for the built-in Xnuva **RandomX v2** RPC miner.
+
+The node must already be running with RPC enabled. The helper never starts `xnuvad` or `xnuva-qt` automatically. For the GUI, start Xnuva Core with `-server=1`.
+
+In the packaged v0.1.0 layout, `miner.sh` automatically uses `bin/xnuva-cli` and the adjacent `data` directory. It can also use an installed `xnuva-cli` and the default data directory, or explicit environment overrides.
+
+```bash
+chmod +x miner.sh
+
+./miner.sh --status
+./miner.sh
+```
+
+Useful modes:
+
+```bash
+./miner.sh --one
+./miner.sh --address <xnuva-address>
+./miner.sh --one --address <xnuva-address>
+```
+
+Continuous mode performs one `generatetoaddress 1 <address>` RPC mining request at a time and rechecks the Xnuva chain identity before the next block. The live tip is intentionally dynamic, so other miners may advance the chain while this miner is running.
+
+The helper verifies both the permanent Xnuva mainnet genesis and the qualified historical checkpoint at height 88. It does **not** require the current tip to remain at height 88.
+
+If no `--address` is supplied, the helper first uses `mining-address.txt` when present. Otherwise, when exactly one wallet is loaded, it creates a new Bech32 mining address and saves that public address locally. `mining-address.txt` is ignored by Git.
+
+On a GNOME desktop, normal continuous mode opens a dedicated **Xnuva RandomX Miner** terminal window so mining activity remains visible. `--status`, `--one` and `--help` stay in the terminal from which they were invoked.
+
+Optional overrides:
+
+```bash
+XNUVA_CLI=/path/to/xnuva-cli
+XNUVA_DATADIR=/path/to/data
+XNUVA_WALLET="wallet name"
+```
+
+Coinbase rewards require **100 confirmations** before they become spendable.
+
 ## Building from source
 
 Xnuva Core is currently intended primarily for developers and experienced node operators.
