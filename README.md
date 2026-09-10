@@ -73,11 +73,18 @@ See [Prince — XNUV Atomic Unit](doc/prince-denomination.md).
 - Bech32 HRP: **xnuva**
 - URI scheme: **xnuva:**
 - P2P message magic: `e3 fc a7 92`
+- Primary public bootstrap node: **84.247.164.62:29444**
 
-At launch there are **no DNS or fixed seed nodes**. Until seed infrastructure is added, additional nodes must connect using a known peer:
+Until compiled fixed-seed support is included in a client build, fresh nodes can bootstrap from the public node with:
 
 ```ini
-addnode=<node-ip>:29444
+addnode=84.247.164.62:29444
+```
+
+or at runtime:
+
+```bash
+xnuva-cli addnode "84.247.164.62:29444" onetry
 ```
 
 ## Binaries
