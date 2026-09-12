@@ -11,10 +11,14 @@ inline constexpr std::string_view MAINNET_GENESIS =
 inline constexpr std::string_view MAINNET_BLOCK1 =
     "c1430034fe105fae719ae896847b26a95b3e896973502ff1cdc5efaac93988a2";
 
-// Populate only from an independently verified, well-buried block on the
-// genuine live Xnuva chain. Deliberately unset until qualification.
-inline constexpr int MAINNET_BURIED_ANCHOR_HEIGHT = -1;
-inline constexpr std::string_view MAINNET_BURIED_ANCHOR = "";
+// Height 88 is already the qualified historical checkpoint enforced by the
+// shipped Xnuva miner helper. It is now well buried in the live mainnet chain.
+inline constexpr int MAINNET_BURIED_ANCHOR_HEIGHT = 88;
+inline constexpr std::string_view MAINNET_BURIED_ANCHOR =
+    "5e4a861d0237fccca85b9a1673c5429c436ae8f3bc453864d9dc335e9f1070cd";
+
+// Populate from getblockheader(height-88-hash, true) on a node that also
+// matches genesis, block 1 and the height-88 checkpoint exactly.
 inline constexpr std::string_view MAINNET_MINIMUM_CHAINWORK = "";
 
 inline constexpr bool REQUIRE_NOT_IBD = true;
@@ -28,7 +32,7 @@ constexpr bool HasQualifiedChainIdentity()
     return CHAIN_IDENTITY_QUALIFIED &&
            MAINNET_GENESIS.size() == 64 &&
            MAINNET_BLOCK1.size() == 64 &&
-           MAINNET_BURIED_ANCHOR_HEIGHT >= 1 &&
+           MAINNET_BURIED_ANCHOR_HEIGHT == 88 &&
            MAINNET_BURIED_ANCHOR.size() == 64 &&
            MAINNET_MINIMUM_CHAINWORK.size() == 64;
 }
