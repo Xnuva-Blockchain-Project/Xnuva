@@ -26,6 +26,7 @@
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
+#include <xnuva/chain_identity_guard.h>
 
 #include <algorithm>
 #include <utility>
@@ -133,6 +134,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->vtx.emplace_back();
 
     LOCK(::cs_main);
+    xnuva::security::EnforceMainnetChainIdentityLocked(m_chainstate.m_chainman);
     CBlockIndex* pindexPrev = m_chainstate.m_chain.Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;

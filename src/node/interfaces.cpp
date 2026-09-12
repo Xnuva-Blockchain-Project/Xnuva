@@ -61,6 +61,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <xnuva/chain_identity_guard.h>
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
@@ -906,14 +907,19 @@ public:
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
+        xnuva::security::EnforceMainnetBlockProductionGuard(m_node, chainman());
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
         return chainman().ProcessNewBlock(std::make_shared<const CBlock>(m_block_template->block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
+        xnuva::security::EnforceMainnetBlockProductionGuard(m_node, chainman());
         auto new_template = WaitAndCreateNewBlock(chainman(), notifications(), m_node.mempool.get(), m_block_template, options, m_assemble_options, m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
+        if (new_template) {
+            xnuva::security::EnforceMainnetBlockProductionGuard(m_node, chainman());
+            return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
+        }
         return nullptr;
     }
 
@@ -959,6 +965,8 @@ public:
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown) override
     {
+        xnuva::security::EnforceMainnetBlockProductionGuard(m_node, chainman());
+
         // Reject too-small values instead of clamping so callers don't silently
         // end up mining with different options than requested. This matches the
         // behavior of the `-blockreservedweight` startup option, which rejects

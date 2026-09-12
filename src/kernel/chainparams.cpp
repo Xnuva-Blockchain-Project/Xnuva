@@ -109,8 +109,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815; // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
 
-        consensus.nMinimumChainWork = uint256{};
-        consensus.defaultAssumeValid = uint256{};
+        // Qualified Xnuva launch-chain identity at buried height 88.
+        consensus.nMinimumChainWork = uint256{"00000000000000000000000000000000000000000000000000000000000b2000"};
+        consensus.defaultAssumeValid = uint256{"5e4a861d0237fccca85b9a1673c5429c436ae8f3bc453864d9dc335e9f1070cd"};
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
