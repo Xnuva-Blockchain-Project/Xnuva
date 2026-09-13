@@ -148,6 +148,13 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
+        // Xnuva Blockchain Project bootstrap nodes.
+        // Primary public seed: Contabo.
+        vSeeds.emplace_back("84.247.164.62");
+
+        // Backup public seed: T620.
+        vSeeds.emplace_back("81.130.208.151");
+
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
