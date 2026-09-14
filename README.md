@@ -10,6 +10,8 @@ Xnuva Core is derived from the Bitcoin Core codebase, but Xnuva is a separate ne
 
 Official project website: **https://europazeus.org/**
 
+Project white paper: **[Xnuva Blockchain Project — Technical White Paper](WHITEPAPER.md)**
+
 Current client release: **Xnuva Core v0.1.0**.
 
 ## Mainnet status
