@@ -14,6 +14,28 @@ Project white paper: **[Xnuva Blockchain Project — Technical White Paper](WHIT
 
 Current client release: **Xnuva Core v0.1.0**.
 
+## ⚠️ Important Scam Warning
+
+As interest in cryptocurrency projects grows, unofficial websites, social-media accounts, marketplaces or individuals may sometimes claim to sell, distribute or represent Xnuva (XNUV).
+
+**Please exercise appropriate caution and always verify information through official project channels.**
+
+The preferred way to obtain XNUV is to **mine it directly through the Xnuva blockchain network**, rather than purchasing coins from unknown individuals or unofficial third-party sellers. Mining allows coins to be obtained through the network's own consensus process without relying on an unknown intermediary.
+
+In particular:
+
+- Be cautious of unsolicited offers to buy or sell XNUV directly.
+- Do not assume that a website, exchange, seller or individual is affiliated with the project simply because they use the Xnuva name, logo or branding.
+- Never send cryptocurrency or money based solely on a private message, social-media post or unofficial website.
+- Never disclose your wallet seed phrase, private keys or passwords to anyone.
+- Download wallet and mining software only from this official GitHub repository or other download locations specifically identified by the project.
+- Verify announcements, releases and important information against the official project repository and website.
+- The project team will never ask for your wallet seed phrase or private keys.
+
+Cryptocurrency transactions are generally irreversible, so taking a few moments to independently verify an offer or communication can provide important protection.
+
+**If you are uncertain whether something is genuine, verify it through the project's official channels before sending funds or providing sensitive information.**
+
 ## Mainnet status
 
 XNUV mainnet launched on **6 September 2026**.
