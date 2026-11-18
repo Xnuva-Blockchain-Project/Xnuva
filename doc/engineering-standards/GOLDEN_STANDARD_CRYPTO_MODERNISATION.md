@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.0 \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.1 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -18,6 +18,10 @@ acceptance, correct wallet accounting and spendability, dependent-system
 integration where applicable, restart/recovery, and sustained monitored
 operation. A failure or unknown at a mandatory gate is a release
 blocker.
+
+**Production continuity rule:** **Never destabilise a functioning production network merely to accelerate its modernisation.**
+A stable legacy node may remain in service while a replacement is developed
+and verified separately; a calendar target is never a deployment justification.
 
 Default posture: preserve existing live chains, genesis, balances, keys,
 wallet compatibility and mining economics. All consensus changes must be
@@ -62,6 +66,10 @@ treasury is an internal dependency where applicable.
 
 ☐ Release decisions are evidence-based and recorded, never inferred from
 unit-test green status.
+
+☐ If the current production chain is functioning, retain the proven binary
+and operating configuration; modernise only in isolated environments until
+all affected release gates and an operator-approved rollback plan pass.
 
 # 2. Baseline inventory and reproducibility
 
@@ -539,8 +547,64 @@ packaging.
 - **Next runtime gate BR (unverified):** start only within disposable isolated regtest datadir, confirm genesis/hash, C++ serialized transaction and network identity, ensure test mining stays disabled, independently repeat the mainnet mining-denial test with the BQ build, and verify clean restart before further modifications.
 - **Regression requirement:** preserve a separately hash-checked rollback copy before applying experimental consensus patches. Treat binary SHA fingerprints and source tree state as part of every runtime evidence bundle. A compile PASS has no implication of release readiness.
 
+## 16.2 Production continuity and maintenance-first policy — 18 November 2026
+
+> **Never destabilise a functioning production network merely to accelerate its modernisation.**
+
+This rule governs decisions to modernise a live cryptocurrency, node, miner,
+wallet, or treasury dependency. New software is not necessarily a safer
+production choice merely because its underlying upstream version is newer.
+
+**Mandatory operational controls:**
+
+- **Keep functioning networks online.** Establish and record the live
+  baseline (binary hash, chain tip, peer agreement, wallet/treasury state,
+  mining and restart health). Treat an absence of reported faults as an
+  observation, not as proof that every component is healthy.
+- **Separate maintenance from modernisation.** Repair verified faults and
+  address material security risks with the smallest justified changes.
+  Do not introduce consensus, database, wallet or network upgrades simply
+  to meet a modernisation schedule.
+- **Isolate experimental work.** Use separate branches, binaries, datadirs,
+  networks and keys. Never deploy a test build onto a functioning production
+  network to speed up a migration.
+- **Make cutover evidence-based.** Require affected G0–G8 release gates,
+  independent peer/block acceptance, wallet balances and spendability,
+  treasury reconciliation where applicable, tested backup/rollback and
+  sustained operation. An unqualified candidate stays off production.
+- **Prefer reversible, staged rollout.** Document an operator-approved
+  change window, monitoring thresholds, stopping conditions and recovery
+  procedure. Keep a working legacy baseline until the replacement is
+  proven and the operator authorises migration.
+- **Protect against avoidable disruption.** If modernisation introduces
+  uncertainty or threatens a functioning network, pause the migration
+  without pausing routine maintenance or urgently needed security fixes.
+
+**Current planning application (operator direction, not a production
+qualification):** TAO's legacy Revival network is reported operational;
+continue its Bitcoin Core modernisation gradually and in isolation,
+currently one dedicated day per week, without setting an artificial
+cutover deadline. Maintain ZUS and HOPE while separately verifying the
+unresolved live-mining/game-treasury credit path. Prioritise confirmed
+ERA and XNUVA defects as targeted maintenance; do not infer that all
+five networks need wholesale upgrades.
+
+**Evidence and approval:** This addendum records the engineering policy
+agreed on 18 November 2026. It is **not** evidence that a particular
+network or build passed an operational gate. The handbook remains in a
+draft pull request pending review and sign-off; no coin software,
+configuration, wallet, blockchain, or running node is changed by this
+documentation update.
+
+## 16.3 Revision history
+
+| Version | Date | Reason and scope | Evidence / approval |
+|---|---|---|---|
+| 1.0 | 18 November 2026 | Initial comprehensive Golden Standard baseline and TAO checkpoint lessons | Draft handbook, PR #1; release evidence as marked in section 10 |
+| 1.1 (draft) | 18 November 2026 | Add mandatory production-continuity rule, maintenance-first decision controls, and isolation/cutover safeguards | Operator-directed policy update; Git commit in PR #1; review/sign-off pending |
+
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.0 baseline. Operational proof must be supplied by
+Document ends — v1.1 draft, preserving the v1.0 baseline. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
