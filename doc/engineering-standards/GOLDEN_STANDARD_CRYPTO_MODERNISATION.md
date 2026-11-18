@@ -521,6 +521,14 @@ packaging.
 
 **Handbook rule:** every new verified lesson should generate a dated, evidence-scoped addendum and, when technically relevant, a regression test. Discussion alone does not update GitHub; a traceable Git commit and review are required. The PR remains draft until reviewed.
 
+### TAO CP71Y-BL–BN compact-target arithmetic — 18 November 2026
+
+- **CP71Y-BL (checkpoint-reported PASS):** the corrected generator produced a 132-line regtest constructor patch (`SHA-256 1bf803db2e0b7a9ef553a8a2fc8c99dc69ea5ba8183b266975ca0b27a43f0a21`), proved the existing mainnet class was byte-for-byte unchanged, and verified patch applicability. The candidate remained unapplied.
+- **CP71Y-BM (review blocked by test defect):** the disposable static review passed structural and network-identity assertions, then failed because the checker incorrectly required the decoded genesis compact target to *equal* the full-precision PoW limit. This failure did not establish a consensus defect.
+- **CP71Y-BN (checkpoint-reported PASS):** independently checked `0x207fffff` decoding, compact round-trip, positive target at/below the full PoW limit, and the saved Scrypt proof against that decoded target. Verified `target = 7fffff0000...0000` and `limit = 7fffff...ffff`; truncation of low-order precision makes strict equality wrong. Production code, authoritative Git and historical fixture remained unchanged.
+- **Required regression tests:** separately verify compact encoding, compact decoding, rounding, sign and overflow flags, target `> 0`, target `<= powLimit`, hash `<= target`, and difficulty transition boundaries; exercise actual C++ `DeriveTarget`/`CheckProofOfWork` and negative vectors before full validation. Never conflate a static-review PASS with real-node acceptance.
+- **Current state:** CP71Y-BO corrected review has been proposed but is **not yet observed as executed**. Constructor is not activated, regtest mining remains disabled, and release gates remain blocked.
+
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
 Document ends — v1.0 baseline. Operational proof must be supplied by
