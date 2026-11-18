@@ -513,7 +513,7 @@ packaging.
 | CP71Y-BF / BG | TAO cryptographic interfaces and built libraries identified; standalone C++ program linked against TAO's libraries reproduced candidate block ID, Merkle root and Scrypt PoW, with mutation controls. | Cross-check test vectors in distinct implementations and perform negative mutation tests; library checks do not substitute for complete node consensus validation. |
 | CP71Y-BH | First constructor patch-generator attempt stopped with a mainnet-class pattern mismatch before applying code. | Hash-gate patches and require exact source preconditions; stop rather than force a mismatched patch. |
 | CP71Y-BI / BJ | Read-only source audit identified the actual mainnet class, genesis API, difficulty functions, and still-disabled mining guard; corrected class matcher confirmed. | Inspect real source interfaces before generating consensus-sensitive changes; preserve mainnet constructor byte-for-byte. |
-| CP71Y-BK | Corrected regtest constructor patch proposed, **not yet evidenced as generated, applied or compiled**. | Review all network identity choices, magic collisions, genesis assertions, activation rules, address prefixes and regtest mining boundaries before implementation. |
+| CP71Y-BK | Initial BK generator stopped on duplicate `CMainParams` matches; BL later corrected it and generated a hash-verified constructor patch. | Target full unique declarations rather than ambiguous class names; retain failure logs and precondition checks. |
 
 **Candidate only (not activated):** proposed separate genesis block ID `d99e3c5c076af8ba636d3d284382e2c9dab0f0f8916f30c0ce87d6c8b7d3041e`. Native cryptographic matching is not a substitute for acceptance by the full node or by independent peers.
 
@@ -527,7 +527,17 @@ packaging.
 - **CP71Y-BM (review blocked by test defect):** the disposable static review passed structural and network-identity assertions, then failed because the checker incorrectly required the decoded genesis compact target to *equal* the full-precision PoW limit. This failure did not establish a consensus defect.
 - **CP71Y-BN (checkpoint-reported PASS):** independently checked `0x207fffff` decoding, compact round-trip, positive target at/below the full PoW limit, and the saved Scrypt proof against that decoded target. Verified `target = 7fffff0000...0000` and `limit = 7fffff...ffff`; truncation of low-order precision makes strict equality wrong. Production code, authoritative Git and historical fixture remained unchanged.
 - **Required regression tests:** separately verify compact encoding, compact decoding, rounding, sign and overflow flags, target `> 0`, target `<= powLimit`, hash `<= target`, and difficulty transition boundaries; exercise actual C++ `DeriveTarget`/`CheckProofOfWork` and negative vectors before full validation. Never conflate a static-review PASS with real-node acceptance.
-- **Current state:** CP71Y-BO corrected review has been proposed but is **not yet observed as executed**. Constructor is not activated, regtest mining remains disabled, and release gates remain blocked.
+- **Current state:** CP71Y-BO corrected static review and CP71Y-BP experimental application are checkpoint-reported PASS; CP71Y-BQ daemon/CLI compiled successfully. The regtest constructor has not yet been runtime-tested. Regtest mining remains disabled, and release gates remain blocked.
+
+### TAO CP71Y-BO–BQ constructor and build evidence — 18 November 2026
+
+**Scope and provenance:** operator-supplied terminal output; checkpoint-reported, not independently reproduced on the development machine.
+
+- **BO — corrected static review PASS:** reviewed the BL patch on a disposable copy; compared mainnet class byte-for-byte; checked proposed network identity and compact target arithmetic. Inherited activation and economic rules, global collisions and full validation remain unqualified.
+- **BP — isolated source application PASS:** reviewed patch applied only in the separate experimental source workspace; backup SHA-256 `370981a719218c826c469ff78bdc53a19656729715b42e934e71454c326483c5`; modified `src/kernel/chainparams.cpp` SHA-256 `0b21d025bfbef3e795fb75f87448d6ef75c537b4b2beff60b8050c83e9f003cc`. Authoritative Git, historical chain fixture and mainnet block-production guard checked unchanged.
+- **BQ — isolated build PASS:** compiled experimental daemon SHA-256 `aa6dec6396ff48770f9961fc9f2a93d5197fb0fd6b9d55422439d18e7ab4c69e` and CLI SHA-256 `817195d1459a96a553fcd296889477c2bab68b12314d1d688444c6d3ebdd8a9e`. Compilation did not start a daemon, prove genesis acceptance, or enable any mining.
+- **Next runtime gate BR (unverified):** start only within disposable isolated regtest datadir, confirm genesis/hash, C++ serialized transaction and network identity, ensure test mining stays disabled, independently repeat the mainnet mining-denial test with the BQ build, and verify clean restart before further modifications.
+- **Regression requirement:** preserve a separately hash-checked rollback copy before applying experimental consensus patches. Treat binary SHA fingerprints and source tree state as part of every runtime evidence bundle. A compile PASS has no implication of release readiness.
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
