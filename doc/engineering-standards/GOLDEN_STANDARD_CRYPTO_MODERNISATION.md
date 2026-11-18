@@ -472,9 +472,7 @@ PASS (or documented N/A) and rollback evidence exists.
 
 # 15. Next actions by engineering priority
 
-☐ TAO: finish CP71Y-BA isolated runtime qualification; preserve
-production guard; perform complete fixture replay and funded end-to-end
-multi-node mining/spend before any release.
+☐ TAO: CP71Y-BB and CP71Y-BC runtime safety checks passed within their tested scope; CP71Y-BD through CP71Y-BG generated and checked a separate candidate regtest genesis. Continue source-review and fail-closed regtest implementation; preserve the mainnet production guard; complete historical replay and funded end-to-end multi-node mining/spend before any release.
 
 ☐ XNUVA: instrument slow cold-start and repeatable mining; isolate
 acceptance, maturity, wallet balance and game bridge separately; clean
@@ -501,6 +499,27 @@ that other coins share identical consensus rules. A stronger future gate
 supersedes a weaker historic checkpoint. This standard applies to core
 nodes, miners, wallets, bridge services, game treasuries and production
 packaging.
+
+## 16.1 TAO regtest engineering lessons — 18 November 2026 (draft addendum)
+
+**Evidence provenance:** checkpoint output supplied by the operator in the TAO modernisation session. This addendum records narrow checkpoint-reported observations; it does not independently inspect the development host or qualify a release.
+
+| Checkpoint | Observed result | Reusable engineering requirement |
+|---|---|---|
+| CP71Y-BA | Experimental daemon/CLI compiled; an attempted `-regtest` startup failed at argument parsing rather than reaching the intended guard. | Confirm actual registered CLI network selectors; do not mistake an unrelated early failure for the desired fail-closed condition. |
+| CP71Y-BB | `-chain=regtest` reached the undefined-regtest constructor and exited with the intended error. | Test guards by asserting the *specific* rejection path, not simply a nonzero exit code. |
+| CP71Y-BC | An isolated mainnet-format daemon identified the original TAO genesis, explicitly rejected an RPC block-creation request, remained at height zero and shut down cleanly. | Run real binary/RPC guard tests with disposable datadirs and isolated networking; record exact tested entry points. This does **not** prove all mining paths are blocked. |
+| CP71Y-BD / BE | Separate regtest genesis candidate generated and reparsed in Python; 80-byte header, transaction serialization, Merkle root, double-SHA256 block ID, Scrypt 1024/1/1 PoW and target were checked. | Separate the block-identity hash from the PoW hash and verify raw bytes and compact target independently. |
+| CP71Y-BF / BG | TAO cryptographic interfaces and built libraries identified; standalone C++ program linked against TAO's libraries reproduced candidate block ID, Merkle root and Scrypt PoW, with mutation controls. | Cross-check test vectors in distinct implementations and perform negative mutation tests; library checks do not substitute for complete node consensus validation. |
+| CP71Y-BH | First constructor patch-generator attempt stopped with a mainnet-class pattern mismatch before applying code. | Hash-gate patches and require exact source preconditions; stop rather than force a mismatched patch. |
+| CP71Y-BI / BJ | Read-only source audit identified the actual mainnet class, genesis API, difficulty functions, and still-disabled mining guard; corrected class matcher confirmed. | Inspect real source interfaces before generating consensus-sensitive changes; preserve mainnet constructor byte-for-byte. |
+| CP71Y-BK | Corrected regtest constructor patch proposed, **not yet evidenced as generated, applied or compiled**. | Review all network identity choices, magic collisions, genesis assertions, activation rules, address prefixes and regtest mining boundaries before implementation. |
+
+**Candidate only (not activated):** proposed separate genesis block ID `d99e3c5c076af8ba636d3d284382e2c9dab0f0f8916f30c0ce87d6c8b7d3041e`. Native cryptographic matching is not a substitute for acceptance by the full node or by independent peers.
+
+**Still release-blocked:** historical chain replay, complete consensus verification, real-network block acceptance, funded wallet credit/maturity/spend, recovery and sustained operation. The draft regtest must have separate genesis, datadir, network magic, ports, and address/key identity. Never reuse Bitcoin regtest magic or silently enable TAO mainnet mining.
+
+**Handbook rule:** every new verified lesson should generate a dated, evidence-scoped addendum and, when technically relevant, a regression test. Discussion alone does not update GitHub; a traceable Git commit and review are required. The PR remains draft until reviewed.
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
