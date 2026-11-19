@@ -17,6 +17,7 @@ add_executable(bench_bitcoin
   chacha20.cpp
   checkblock.cpp
   checkblockindex.cpp
+  xnuva_randomx_startup.cpp
   checkqueue.cpp
   cluster_linearize.cpp
   connectblock.cpp
@@ -63,7 +64,10 @@ target_raw_data_sources(bench_bitcoin NAMESPACE benchmark::data
   data/block413567.raw
 )
 
+target_include_directories(bench_bitcoin PRIVATE ${RANDOMX_INCLUDE})
+
 target_link_libraries(bench_bitcoin
+  randomx
   core_interface
   test_util
   bitcoin_node
