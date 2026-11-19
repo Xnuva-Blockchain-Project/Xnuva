@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.2 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.3 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -613,16 +613,45 @@ documentation update.
 
 **Evidence state:** XNUVA missing-dependency diagnostic OBSERVED; IPC-disabled reconfiguration UNVERIFIED pending output. This is a handbook/process update only. No XNUVA or TAO binaries, blockchains, wallets, consensus rules or production deployments are changed by this entry.
 
-## 16.4 Revision history
+## 16.4 Emergency repair and accelerated implementation — 19 November 2026
+
+> **Reliability first. Emergency repairs without unnecessary delay. Release as soon as essential safety is demonstrated.**
+
+**Purpose and authority.** A confirmed defect harming end users must not wait for unrelated modernisation milestones or every unrelated test. Emergency classification expedites repair, focused verification, approval and deployment; it does not convert a FAIL or UNVERIFIED into a PASS. The responsible operator records severity, accepts the scoped residual risk and authorises deployment or containment.
+
+| Priority | Triggers | Response |
+|---|---|---|
+| **P0 — Critical** | Active risk of funds/keys loss or theft, exploited security flaw, chain corruption or network-wide consensus failure | Immediate containment and user warning as needed; urgent minimal repair; essential safety tests; operator-approved emergency rollout. If no safe binary exists, containment comes first. |
+| **P1 — Urgent** | Wallet fails to start/recover, mining or block-processing failure, major operational/user-facing defect | Prioritise targeted repair, fast focused regression testing, backups and reversible monitored deployment ahead of routine roadmap work. |
+| **P2 — Routine** | Cosmetic branding, elective optimisation, ordinary UI improvement or planned modernisation without material harm | Standard review and qualification; reclassify if user impact warrants. |
+
+**Mandatory emergency minimum-safety gate (record PASS / FAIL / UNVERIFIED / N/A and evidence):**
+
+1. **Triage/contain.** Identify affected users, versions, chains and failure mode. Distinguish observation from verified root cause; for P0, disable affected operations or warn users if safer than distributing unverified code.
+2. **Preserve recovery.** Record running binary/hash, chain height, wallet state and relevant config. Before any destructive reinstall or datadir change, independently verify recoverable, secure backups of all wallet databases/files (including descriptor wallets where used), keys and recovery-critical settings. Never commit secrets.
+3. **Minimise the change.** Use a traceable hotfix commit and reproducible toolchain. Keep unrelated branding, performance, wallet, database and consensus changes separate unless a combined change is justified and separately tested.
+4. **Test affected invariants.** Compile and run focused tests for the repair plus every safety-critical area it touches: chain and historical-block compatibility, PoW/consensus and signature checks, wallet loading and balances, signing/spendability, peer/block acceptance, mining/reward maturity and treasury integration as applicable. Never turn off required security/consensus checks to make a test pass. A failing *unrelated* test may be deferred only with documented evidence that it is unrelated; do not silently ignore it.
+5. **Deploy with containment.** Use smallest practical rollout (isolated environment, test machine or limited cohort before public distribution), clear stopping conditions and operator approval. Preserve prior binary and data. Prove rollback is feasible; database migrations and already-accepted consensus changes may make binary rollback impossible. If so, document an alternate recovery strategy before deployment.
+6. **Verify the repair in operation.** Check actual startup, wallet access, chain tip/peer agreement, balances and critical functions, clean shutdown/restart, independent network acceptance where applicable, and relevant user reports. Monitor and pause/roll back if regressions appear.
+7. **Finish the evidence.** Log incident priority, symptoms, root-cause confidence, commit/build hashes, scoped test results, deferred tests, decision authority, rollout size, outcome and monitoring. Complete remaining regression, recovery and sustained-operation checks before claiming *fully qualified general release*.
+
+**Explicit emergency exception and limit.** P0/P1 may receive a narrowly scoped **provisional emergency deployment** based on the essential applicable evidence, without waiting an arbitrary 24–48 hours before protecting users. This is not full release qualification. A failed safety-critical gate blocks deployment of that candidate; use containment and a safer repair instead. Distinguish an operator-approved development-machine deployment from an end-user release. Where unresolved issues remain, communicate them plainly.
+
+**XNUVA context (operator-supplied evidence, not an approved release):** experimental security-warning branding branch `ui/xnuva-core-rebranding-20261119` was pushed at commit `6d1cc05a2a`; GUI compilation and standalone translation lookup passed. CP51X GUI testing reported an RPC assertion failure and a wallet-test timeout. RandomX startup acceleration is independently experimental. The combined build, relevance of those failures, backup recovery and end-user release are not yet qualified. Accelerated work may continue without treating these open gates as passed.
+
+**Governance.** Keep incident-level decisions and verification in traceable issues, PRs or checkpoint logs. Update the living handbook with new verified lessons. This draft policy changes no production binary, configuration, wallet, blockchain or network.
+
+## 16.5 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
 |---|---|---|---|
 | 1.0 | 18 November 2026 | Initial comprehensive Golden Standard baseline and TAO checkpoint lessons | Draft handbook, PR #1; release evidence as marked in section 10 |
 | 1.1 (draft) | 18 November 2026 | Add mandatory production-continuity rule, maintenance-first decision controls, and isolation/cutover safeguards | Operator-directed policy update; Git commit in PR #1; review/sign-off pending |
 | 1.2 (draft) | 19 November 2026 | Document optional Cap'n Proto / IPC dependency triage, reproducible feature flags and isolated build-config recovery | XNUVA CP47V observed configuration blocker; IPC-disabled recovery not yet verified; draft PR #1 |
+| 1.3 (draft) | 19 November 2026 | Add P0/P1 emergency repair classification, fast-track testing, provisional rollout, recovery and rollback controls | Operator-agreed policy; CP51X failures unresolved; draft PR #1 pending review |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.2 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.3 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
