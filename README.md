@@ -169,6 +169,32 @@ Coinbase rewards require **100 confirmations** before they become spendable.
 
 Xnuva Core is currently intended primarily for developers and experienced node operators.
 
+### Linux desktop wallet (Qt GUI)
+
+The normal CMake default is a command-line build. To build the desktop wallet, use the dedicated `xnuva-qt` configure preset; it explicitly enables the Qt GUI and disables optional IPC, USDT tracing and QR-code support so those optional dependencies are not required.
+
+On Ubuntu or Debian, install the build and Qt dependencies:
+
+```bash
+sudo apt-get update
+sudo apt-get install build-essential cmake pkgconf python3 \
+  libevent-dev libboost-dev libsqlite3-dev \
+  qt6-base-dev qt6-tools-dev qt6-l10n-tools qt6-tools-dev-tools libgl-dev
+```
+
+Configure and build the GUI wallet from the repository root:
+
+```bash
+cmake --preset xnuva-qt
+cmake --build build_xnuva_qt --target bitcoin-qt -j2
+```
+
+The resulting executable is `build_xnuva_qt/bin/xnuva-qt`.
+
+### Other build configurations
+
+Xnuva Core also supports the standard CMake build options for command-line nodes and developer builds. See [Unix build notes](doc/build-unix.md) and the [CMake preset list](CMakePresets.json).
+
 Platform-specific build documentation is available in the [doc directory](doc/).
 
 Xnuva Core v0.1.0 is the first qualified client release. Public seed infrastructure and additional platform installers continue as forward Git commits.
