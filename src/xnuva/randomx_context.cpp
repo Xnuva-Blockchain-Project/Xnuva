@@ -54,11 +54,24 @@ std::optional<RandomXSeed> ResolveRandomXSeed(
 
 struct RandomXLightCache::Impl {
     randomx_cache* cache{nullptr};
+    randomx_flags vm_flags{RANDOMX_FLAG_V2};
 
     explicit Impl(const uint256& seed_block_id)
     {
-        cache = randomx_alloc_cache(
-            RANDOMX_FLAG_DEFAULT);
+        // Prefer supported acceleration, retaining portable fallback.
+        const randomx_flags recommended{
+            randomx_get_flags()
+        };
+
+        cache = randomx_alloc_cache(recommended);
+
+        if (cache != nullptr) {
+            vm_flags = static_cast<randomx_flags>(
+                recommended | RANDOMX_FLAG_V2);
+        } else {
+            cache = randomx_alloc_cache(
+                RANDOMX_FLAG_DEFAULT);
+        }
 
         if (cache == nullptr) {
             throw RandomXResourceError(
@@ -236,11 +249,20 @@ uint256 RandomXLightCache::Hash(
         decltype(&randomx_destroy_vm)
     > vm{
         randomx_create_vm(
-            RANDOMX_FLAG_V2,
+            m_impl->vm_flags,
             m_impl->cache,
             nullptr),
         &randomx_destroy_vm
     };
+
+    // A failed accelerated VM must not disable validation.
+    // The cache is immutable and can serve a portable VM.
+    if (!vm && m_impl->vm_flags != RANDOMX_FLAG_V2) {
+        vm.reset(randomx_create_vm(
+            RANDOMX_FLAG_V2,
+            m_impl->cache,
+            nullptr));
+    }
 
     if (!vm) {
         throw RandomXResourceError(
