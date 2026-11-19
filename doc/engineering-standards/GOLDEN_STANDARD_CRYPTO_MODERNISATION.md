@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.1 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.2 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -596,15 +596,33 @@ draft pull request pending review and sign-off; no coin software,
 configuration, wallet, blockchain, or running node is changed by this
 documentation update.
 
-## 16.3 Revision history
+## 16.3 Optional build dependencies and reproducible build qualification — 19 November 2026
+
+**Cross-project lesson (TAO Revival / XNUVA Core):** Modern Bitcoin Core-derived projects may enable optional multiprocess/interprocess communication (IPC) facilities requiring Cap'n Proto. A missing optional development dependency is a **configuration blocker**, not evidence that PoW, historical chain data or consensus code has failed.
+
+**XNUVA checkpoint 47V — operator-supplied evidence:** An isolated experimental CMake configuration, with `BUILD_BENCH=ON`, `BUILD_TESTS=ON` and `RelWithDebInfo`, stopped at `src/ipc/libmultiprocess/CMakeLists.txt:18` reporting that Cap'n Proto was not found. The CMake diagnostic explicitly suggested `-DENABLE_IPC=OFF` as an alternative. This configuration has **not yet been shown to complete successfully**; no benchmark compilation, RandomX performance improvement or release qualification is implied. A similar dependency obstacle was reported during TAO modernisation, but this entry does not assert an independently reproduced TAO build result.
+
+**Mandatory build-qualification checklist:**
+
+- ☐ Identify whether each missing dependency serves consensus verification, wallet safety, networking, operational requirements or an optional build feature. Do not classify a missing library as a consensus defect without evidence.
+- ☐ Where the feature is genuinely unnecessary for the scoped **isolated experiment**, prefer an explicit documented feature toggle over opportunistic package installation or consensus-code modification. For the current XNUVA benchmark candidate, investigate `-DENABLE_IPC=OFF`; do not assume that this choice suits every production deployment.
+- ☐ Never disable chain validation, signature checking, PoW, wallet security, or other required functionality as a shortcut to satisfy a build.
+- ☐ Record the exact CMake command, source commit/worktree, compiler and library versions, feature flags, configuration output, executable hashes and subsequent test outcomes. Treat `BUILD_BENCH` and `BUILD_TESTS` as explicit, reproducible settings.
+- ☐ If configuration fails, preserve the diagnostic and inspect/reconfigure **only the isolated build directory**. Do not delete, overwrite or repurpose a qualified historical build as a workaround.
+- ☐ After a configuration change, verify that expected targets exist, compile, and pass the affected tests; confirm the disabled feature is not required for intended RPC, wallet, network or deployment functions. Recheck all affected release gates before any production change.
+
+**Evidence state:** XNUVA missing-dependency diagnostic OBSERVED; IPC-disabled reconfiguration UNVERIFIED pending output. This is a handbook/process update only. No XNUVA or TAO binaries, blockchains, wallets, consensus rules or production deployments are changed by this entry.
+
+## 16.4 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
 |---|---|---|---|
 | 1.0 | 18 November 2026 | Initial comprehensive Golden Standard baseline and TAO checkpoint lessons | Draft handbook, PR #1; release evidence as marked in section 10 |
 | 1.1 (draft) | 18 November 2026 | Add mandatory production-continuity rule, maintenance-first decision controls, and isolation/cutover safeguards | Operator-directed policy update; Git commit in PR #1; review/sign-off pending |
+| 1.2 (draft) | 19 November 2026 | Document optional Cap'n Proto / IPC dependency triage, reproducible feature flags and isolated build-config recovery | XNUVA CP47V observed configuration blocker; IPC-disabled recovery not yet verified; draft PR #1 |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.1 draft, preserving the v1.0 baseline. Operational proof must be supplied by
+Document ends — v1.2 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
