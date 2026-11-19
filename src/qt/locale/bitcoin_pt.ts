@@ -160,7 +160,7 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Confirmar encriptação da carteira</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ACCESS TO YOUR XNUVA&lt;/b&gt;!</source>
         <translation type="unfinished">Aviso: se encriptar a sua carteira e perder a sua frase de segurança, &lt;b&gt;PERDE TODAS AS SUAS BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -188,7 +188,7 @@ A assinatura só é possível com endereços do tipo "legado".</translation>
         <translation type="unfinished">Voltar</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your XNUVA from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Lembre-se que a encriptação da sua carteira não impede totalmente os seus bitcoins de serem roubados por programas maliciosos (malware) que infetem o seu computador.</translation>
     </message>
     <message>

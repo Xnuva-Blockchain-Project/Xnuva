@@ -160,7 +160,7 @@ Fífọwọ́sowọ́pọ̀ jẹ́ ẹni pé ó ṣeé ṣe pẹ̀lú àwọn à
         <translation type="unfinished">Ṣàfihàn ìdánimọ̀ ìṣìfúná apò-owó</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ACCESS TO YOUR XNUVA&lt;/b&gt;!</source>
         <translation type="unfinished">Ìkìlọ̀: Bí o bá ṣìfúná apò-owó rẹ tí o sì pàdánù ọ̀rọ̀-ìfàṣẹsí rẹ, ìwọ yóò&lt;b&gt;ìwọ yóò sọnù gbogbo àwọn Bitcoin rẹ&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -188,7 +188,7 @@ Fífọwọ́sowọ́pọ̀ jẹ́ ẹni pé ó ṣeé ṣe pẹ̀lú àwọn à
         <translation type="unfinished">Padà</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your XNUVA from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Rántí pé ṣíìfúná apò-owó rẹ kì í lè dáàbò bo àwọn Bitcoin rẹ pátápátá kúrò lọ́wọ́ ìjìnlẹ̀ olè sọ́fitiwia búburú tó bá kó kọ̀mpútà rẹ</translation>
     </message>
     <message>

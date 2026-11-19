@@ -159,7 +159,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ยืนยันการเข้ารหัสกระเป๋าเงิน</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ACCESS TO YOUR XNUVA&lt;/b&gt;!</source>
         <translation type="unfinished">คำเตือน: หากคุณเข้ารหัสกระเป๋าของคุณและสูญเสียรหัสผ่านของคุณ คุณจะสูญเสียบิตคอยน์ทั้งหมดของคุณ!</translation>
     </message>
     <message>
@@ -187,7 +187,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">กลับ</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your XNUVA from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">จำไว้ว่าการเข้ารหัสกระเป๋าของคุณไม่สามารถปกป้องบิตคอยน์ของคุณจากการถูกขโมยโดยมัลแวร์ที่ติดเชื้อคอมพิวเตอร์ของคุณได้อย่างสมบูรณ์</translation>
     </message>
     <message>
