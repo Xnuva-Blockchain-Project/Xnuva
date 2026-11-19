@@ -164,7 +164,7 @@ Undirritan, av boðum, er einans møgulig fyri 'legacy' (eldri) adressusløg.</t
         <translation type="unfinished">Vátta mappu bronglan</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ACCESS TO YOUR XNUVA&lt;/b&gt;!</source>
         <translation type="unfinished">Gev gætur: Bronglar tú mappuna og gloymur loyniorðið &lt;b&gt;MISSUR TÚ ALLAR TÍNAR BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -192,7 +192,7 @@ Undirritan, av boðum, er einans møgulig fyri 'legacy' (eldri) adressusløg.</t
         <translation type="unfinished">Ógilda</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your XNUVA from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Hav í huga at tað at brongla tína mappu ikki er ein fullfíggjað verja ímóti at tínar bitcoins kunnu stjalast av illbúnaði á tíni teldu.</translation>
     </message>
     <message>
