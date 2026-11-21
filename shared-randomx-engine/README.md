@@ -1,5 +1,8 @@
 # Shared RandomX Foundation (RX-001)
 
+**Repository migration (2026-11-21):** This is the preserved original source snapshot. The active standalone development repository is [Xnuva-RandomX-Engine](https://github.com/Xnuva-Blockchain-Project/Xnuva-RandomX-Engine); its `development/randomx-v2-foundation` branch is the new place for reusable engine changes. This original branch is retained for provenance and rollback. No live XNUVA consensus has changed.
+
+
 **STATUS: EXPERIMENTAL / SOURCE-LEVEL CHECKPOINT — DO NOT RELEASE OR DEPLOY**
 **Branch:** feature/shared-randomx-engine-20261121
 **Created:** 2026-11-21
