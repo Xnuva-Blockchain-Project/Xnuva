@@ -23,32 +23,32 @@ adapter must define comparison with its own compact-target representation and
 block-ID byte order. This library intentionally does not contain any coin
 type, reward, activation, seed-height or difficulty rule.
 
-**Critical algorithm warning:** XNUVA uses a specific \`RANDOMX_FLAG_V2\`
+**Critical algorithm warning:** XNUVA uses a specific `RANDOMX_FLAG_V2`
 variant in its vendored RandomX source. Plain upstream RandomX v1 is **not
 interchangeable**. Before other coins choose this version for a fork, review
 the exact V2 specification/source and get independent test vectors.
 
 ## Dependency policy
 
-- Pinned XNUVA source revision: \`853a3171ece198f60b5125a16dca83d68a8f53c3\`.
-- Vendored RandomX source at \`src/randomx/\` in that commit (including its
+- Pinned XNUVA source revision: `853a3171ece198f60b5125a16dca83d68a8f53c3`.
+- Vendored RandomX source at `src/randomx/` in that commit (including its
   original licensing notices).
 - By default CMake downloads that *exact commit*; no floating branch or
-  unversioned system \`librandomx\` is used.
-- An explicit \`RANDOMX_FOUNDATION_SOURCE_DIR\` override can build against a
+  unversioned system `librandomx` is used.
+- An explicit `RANDOMX_FOUNDATION_SOURCE_DIR` override can build against a
   local checkout; operators must independently validate its source provenance.
 - Compilation and tests have **not** been run by the GitHub write operation.
 
 ## Minimal API
 
-\`\`\`cpp
+```cpp
 #include <xnuva_randomx/engine.h>
 // Input and seed are caller-defined byte spans.
 // xnuva::randomx_foundation::LightHasher hasher(seed_key);
 // auto raw_hash = hasher.Hash80ByteHeader(serialized_header_80_bytes);
-\`\`\`
+```
 
-The 256-MiB light-mode cache is initialised once per \`LightHasher\` and
+The 256-MiB light-mode cache is initialised once per `LightHasher` and
 reused across many hashes for the same seed. Concurrent calls on one instance
 are serialised. Construct a separate instance when the seed changes. For
 normal efficient mining we will later need a separate full-memory fast-mode
@@ -57,15 +57,15 @@ measurement; a hashing helper alone is not a mining engine.
 
 ## Build in an isolated worktree
 
-From the root of a checkout of this branch, where \`src/randomx\` is present:
+From the root of a checkout of this branch, where `src/randomx` is present:
 
-\`\`\`bash
+```bash
 cmake -S shared-randomx-engine -B /tmp/xnuva-rx-foundation-build \
   -DRANDOMX_FOUNDATION_SOURCE_DIR="$PWD/src/randomx" \
   -DBUILD_TESTING=ON
 cmake --build /tmp/xnuva-rx-foundation-build -j2
 ctest --test-dir /tmp/xnuva-rx-foundation-build --output-on-failure
-\`\`\`
+```
 
 Without the local override, CMake fetches the pinned XNUVA commit over
 GitHub (network access required). Build/test independently on Linux and
@@ -77,10 +77,10 @@ checkout is **not automatically proven** to match the pinned revision.
 Other coins may include this CMake subproject or later consume a dedicated
 repository release pinned to a tagged commit:
 
-\`\`\`cmake
+```cmake
 add_subdirectory(path/to/shared-randomx-engine)
 target_link_libraries(coin_node PRIVATE xnuva::randomx_foundation)
-\`\`\`
+```
 
 **This is not safe to do in a production daemon yet.** The coin-specific
 adapter must choose exactly when to call RandomX and derive the seed from
