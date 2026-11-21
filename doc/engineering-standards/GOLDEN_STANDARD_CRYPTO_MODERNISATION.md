@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.6 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.7 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -715,6 +715,20 @@ documentation update.
 
 **Evidence status (21 November 2026):** policy **APPROVED BY OPERATOR**; shared foundation repository and design documents **OBSERVED**; complete independent shared-engine testing, TAO integration, per-coin fork specification and any live activation **UNVERIFIED / NOT AUTHORISED**.
 
+### TaoX naming and branch preservation decision (21 November 2026)
+
+**Operator-approved identity:** The modernised continuation of **TAO Revival** is named **TaoX**, with the four-letter ticker **TAOX** (not TAO). This is a branding and engineering identity decision, **not** an independently deployed chain, automatic token swap, consensus activation, or new genesis.
+
+- **TAO repository:** [Xnuva-Blockchain-Project/Tao](https://github.com/Xnuva-Blockchain-Project/Tao). Preserve legacy branches, the Bitcoin Core 31.1 experimental modernisation baseline and the RandomX hard-fork experiment.
+- **New isolated development branch:** `modernisation/taox-randomx`, created from `modernisation/randomx-hardfork-experimental-20261121` at commit `b275f88c951c1b9744f75724769c21ad6c950087`. At creation, these branch tips compared **identical**, preserving the seven commits ahead of the earlier Bitcoin Core 31.1 experimental baseline.
+- **Future product naming (proposed implementation, not yet performed):** wallet display name `TaoX Core`; daemon `taoxd`; command-line client `taox-cli`; software release name `TaoX`. Confirm all existing executable names and packaging references before changing them.
+- **Separation of changes:** Branding/ticker/UI/package changes must be reviewed and tested independently from RandomX consensus changes. Keep legacy TAO network identity, network ports/magic, block formats, address prefixes, wallet/key formats, chain data, historical transactions, balances and subsidy untouched unless an explicitly reviewed compatibility plan requires a change.
+- **Compatibility:** Existing historical TAO blocks remain subject to the original Scrypt validation; production must not switch algorithm until a separately specified future activation height, complete network-upgrade plan, independently accepted transition blocks, and explicit release approval.
+- **Migration tests:** Check string/ticker consistency across GUI, CLI, wallet metadata, explorers, miners and user-facing documentation. Do not silently rename wallet files or datadirs such that established wallets appear missing. Preserve restore/rollback and clear legacy-version labelling.
+- **No implicit production changes:** Branch creation and handbook edits do not build, deploy, restart or alter running TAO nodes, mining, wallets or the five-chain treasury.
+
+**Evidence status:** TAOX naming and branch plan **APPROVED BY OPERATOR**; new GitHub branch creation and initial exact base comparison **VERIFIED**; program-code branding rename, RandomX activation and production upgrade **NOT IMPLEMENTED / NOT AUTHORISED**.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -726,9 +740,10 @@ documentation update.
 | 1.4 (draft) | 19 November 2026 | Add mandatory Safe Wallet Discovery, Upgrade and Recovery Protocol; prevent silent empty-wallet substitution; require verified backups, explicit wallet selection and balance/history continuity | XNUVA fresh-install incident and operator-supplied recovery screenshot/log; wallet-discovery and release regression requirements added; implementation qualification remains outstanding |
 | 1.5 (draft) | 20 November 2026 | Record Contabo VPS 2 TAO/ZUS/HOPE operational evidence, legacy Boost build compatibility, wallet-disabled Zeus build limitations and deferred source-repair qualification | Operator-supplied checkpoints 28–52; nodes enabled/active, ZUS/HOPE still synchronising; upstream repairs and full qualification outstanding |
 | 1.6 (draft) | 21 November 2026 | RandomX-first modular PoW policy for TAO, ERA, ZUS, HOPE and XNUVA; forward-only consensus controls and shared-engine verification gates | Operator-approved sequencing; experimental shared engine exists, integration and deployment not qualified |
+| 1.7 (draft) | 21 November 2026 | TaoX coin name and TAOX ticker, preserved TAO historical network, new experimental development branch and branding/consensus separation | Operator-approved naming; branch created and compared identical to existing RandomX experimental tip; no product code or live node changes |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.6 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.7 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
