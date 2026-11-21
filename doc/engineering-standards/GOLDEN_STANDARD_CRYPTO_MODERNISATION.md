@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.8 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.9 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -748,6 +748,20 @@ documentation update.
 
 **Evidence status:** modular hash vectors, synthetic contextual controls, 128-case Scrypt equivalence, actual validation-object compilation, isolated daemon link, offline genesis startup/shutdown, and structural 637-header fixture inspection **VERIFIED in operator logs**. Full 637-block daemon import/replay, live consensus/UTXO equivalence, fork/reorg, independent peer verification, RandomX activation, and release readiness **NOT VERIFIED**. The changed `migration/modern-tao-draft/src/validation.cpp` remains **uncommitted** as of CP128.
 
+### TaoX CP129–132 historical parity and 50% development milestone (21 November 2026)
+
+**Evidence classification:** Based on operator-supplied terminal logs. Test was conducted entirely in disposable development-machine data directories with private network namespaces, P2P inactive, wallet and RPC disabled; no live five-chain services changed. These are **pre-activation historical compatibility tests only**.
+
+- **CP129 — replay preparation:** Isolated copy of the canonical 637-record TAO mainnet history, removing zero-padding: 118,908 bytes, SHA-256 `2e23e5b9491e43f13b61146287cfad50e5edf8a867ae5dd4d1687ec9cfcc10c6`. Original 16 MiB fixture SHA-256 `ba52baa8d8158ad63046c85efa7ad5e3d6724e6bb2e7e45d3c12014ca368d666` reverified. Experimental daemon supports `-loadblock`; no node started in this checkpoint.
+- **CP130 — actual experimental daemon block import:** `/tmp/taox-cp125-G3maWcMX/taoxd-experimental` (SHA-256 `f6a397917cbcbe7181a75fba5a378d975b2d1dce5502556bdb65329844d85ecb`) reported 637 `UpdateTip` events through height 636; final SHA256d block ID `7e235df054e299f729ef32e136fe0acc198aa792422fd24bc0309ecbc4847c88`, `log2_work=32.663260`, `tx=637`; clean `Shutdown done`. This establishes successful isolated import for the fixture, not live peer validation or a complete UTXO-set equivalence proof.
+- **CP131 — reopen without reimport:** Experimental daemon reopened the same disposable block index/chainstate with **no `-loadblock`**, reporting `CBlockFileInfo(blocks=637, size=118908, heights=0...636)`, `Loaded best chain` with the exact expected tip at height 636, `block tree size=637`, `Done loading`, and clean `Shutdown done`. Restart path now evidenced for this fixture.
+- **CP132 — independent binary control:** Historical baseline daemon SHA-256 `0f0f49bfca29561188e911b00eec06d6ffe22ad482c6cb6a3c868a04f8f56502` independently imported the same fixture in its own empty datadir; 637 control `UpdateTip` records matched the experimental daemon on hash, height, **reported six-decimal log2_work**, and transaction count. The baseline daemon also shut down cleanly. **Caution:** equal formatted `log2_work` values are not exact integer chainwork equality; precise chainwork and full UTXO-state hash comparison remain open.
+- **Golden Standard for future coins:** Compare original and modernised client binaries independently against an identical, pinned historical block fixture, on separate empty isolated datadirs; verify every accepted tip, checkpoint/root identity, exact integer chainwork where available, cumulative transactions, and clean restart *without reimport*. Preserve both logs and hashes. Then independently compare UTXO commitments/accounting and invalid-block rejection; do not extrapolate TaoX Scrypt parity to ERA, ZUS, HOPE or XNUVA RandomX readiness.
+- **Project-management milestone:** TaoX was marked **approximately 50% overall engineering progress (subjective planning estimate)** after CP132, satisfying the operator's agreed session stopping milestone. This is **NOT 50% release qualification** and no RandomX activation is approved. Stop additional experimental tests for this session.
+- **Preservation/resumption:** Experimental local `migration/modern-tao-draft/src/validation.cpp` patch remained **uncommitted** at the start of CP132, with exact experimental Git HEAD `99cba10a17216df09f4eff23266f178f84e29f10`. Before resuming, explicitly inspect and preserve that local diff with a verified commit/branch after source review; do not assume a handbook update has committed the consensus patch. Disposable development inputs are under `/tmp` and can disappear on reboot. No production changes or production network activation.
+
+**Outstanding release gates:** cryptographically precise chainwork equality, UTXO state and subsidy/accounting comparisons, invalid history and reorg scenarios, authenticated epoch seed selection, future RandomX difficulty/fork-choice rules, all PoW entry points in runtime/storage/P2P, block production and independent acceptance across transition, wallet/maturity and recovery, upgrade coordination, reproducible builds and long-running observation. Existing working chains and balances must be protected throughout.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -761,9 +775,10 @@ documentation update.
 | 1.6 (draft) | 21 November 2026 | RandomX-first modular PoW policy for TAO, ERA, ZUS, HOPE and XNUVA; forward-only consensus controls and shared-engine verification gates | Operator-approved sequencing; experimental shared engine exists, integration and deployment not qualified |
 | 1.7 (draft) | 21 November 2026 | TaoX coin name and TAOX ticker, preserved TAO historical network, new experimental development branch and branding/consensus separation | Operator-approved naming; branch created and compared identical to existing RandomX experimental tip; no product code or live node changes |
 | 1.8 (draft) | 21 November 2026 | Reusable modular RandomX integration lessons from TaoX CP102–128: full-node PoW boundaries, anti-DoS, context/seed gating, real compilation/linking, offline startup and replay evidence limits | Operator-supplied checkpoints; no mainnet RandomX activation or historical full-chain replay |
+| 1.9 (draft) | 21 November 2026 | TaoX CP129–132 verified 637-record historical import, restart and independent baseline comparison; scope and release gaps; 50% development milestone | Operator-supplied logs; no production changes or RandomX activation |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.8 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.9 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
