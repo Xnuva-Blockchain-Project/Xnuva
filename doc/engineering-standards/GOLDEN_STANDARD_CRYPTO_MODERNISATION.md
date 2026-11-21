@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.3 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.6 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -692,6 +692,29 @@ documentation update.
 
 **Status:** Contabo node build/installation/startup observations **VERIFIED FROM OPERATOR-SUPPLIED LOGS**. Permanent upstream source fixes **DEFERRED / NOT COMMITTED**. Full synchronization, independent historical-chain comparison, reboot recovery and sustained operation **UNVERIFIED**. This handbook entry changes documentation only; it does not alter running nodes, coin source repositories, wallets, balances or chain state.
 
+## 16.6A RandomX-first modular Proof-of-Work policy (21 November 2026)
+
+**Policy decision / engineering direction — NOT a consensus activation or release approval.** Before resuming TAO Revival's broader modernisation and CP66 networking qualification, establish and integrate a reusable, separately versioned RandomX Proof-of-Work foundation **in an isolated experimental build**. Resume staged TAO acceptance testing after the new integration is independently verified. Never deploy the experimental build on live nodes or bypass outstanding P2P checks.
+
+**Authoritative shared engineering reference:** [Xnuva-RandomX-Engine](https://github.com/Xnuva-Blockchain-Project/Xnuva-RandomX-Engine), especially [modular architecture](https://github.com/Xnuva-Blockchain-Project/Xnuva-RandomX-Engine/blob/main/docs/MODULAR-RANDOMX-ARCHITECTURE.md), [coin integration gates](https://github.com/Xnuva-Blockchain-Project/Xnuva-RandomX-Engine/blob/main/docs/COIN-INTEGRATION.md), and the README. This handbook adds governance and sequencing; it **does not supersede** those detailed technical specifications.
+
+### Mandatory design and transition controls
+
+- [ ] Develop **one pinned, build-time C++ RandomX engine dependency** with clearly defined hash interfaces and independently pinned source version/commit; do not use floating upstream branches, unversioned libraries or live-swappable executable plugins. Preserve licence and source provenance.
+- [ ] Implement **five isolated coin consensus adapters**: TAO Revival, ERA, ZUS, HOPE and XNUVA. Each adapter controls its own historical algorithm, block-header serialization, block ID versus PoW hash byte ordering, nBits/target comparison, difficulty, seed derivation, chain-context validation and future activation logic. A shared hash library must **not** decide coin-specific consensus.
+- [ ] Recognise that existing XNUVA uses a **RandomX v2** variant with `RANDOMX_FLAG_V2`; generic upstream RandomX v1 must not silently replace it. XNUVA's work is a separate **bit-for-bit, no-fork compatibility refactor** until independently proven equivalent; no second algorithm transition should be inferred.
+- [ ] **TAO first:** review the existing experimental Bitcoin Core 31.1 worktree and original Scrypt rules; introduce RandomX only behind explicit future-height activation controls on disposable test networks. Preserve and replay all pre-activation Scrypt blocks **unchanged**, including genesis, block IDs and historical difficulty.
+- [ ] Apply the same forward-only historical-preservation requirements to ERA, ZUS and HOPE. For ZUS and HOPE, retain independently validated **PoS blocks and staking consensus**, not just their PoW path; do not force legacy PoS history through RandomX.
+- [ ] No activation height, live hard fork, upgraded-node cutover or economic/retargeting change is approved by this policy. A future production transition needs a documented network-upgrade plan, sufficient participant readiness, interoperability tests, risk/rollback limits and explicit operator sign-off. Historical funds, legacy addresses, wallets and treasury balances must remain valid.
+- [ ] Use independent reference vectors for the **exact pinned RandomX variant**, canonical seed/epoch boundary tests, invalid target/header tests, light-versus-fast-mode parity, memory exhaustion/resource constraints, multithreading, deterministic cross-platform hashes and performance on representative hardware.
+- [ ] Qualify each adapter independently: clean compile; isolated historical replay across the activation boundary; old/new validation behaviour; real independent peer/block acceptance; mining and miner-to-node interoperability; coinbase/stake rewards, maturity, accounting and spendability; treasury reconciliation where applicable; reorg; restart/recovery; and sustained monitored operation. Retest all affected gates when the shared module version changes.
+- [ ] Treat a successful CMake configure, source commit, fixture PASS or local block hash as **narrow evidence only**. The shared repository currently describes itself as **EXPERIMENTAL / DO NOT RELEASE OR DEPLOY** and identifies compilation, CTest, independent vector validation and per-coin integration as outstanding. Do not mark these completed without evidence.
+- [ ] Preserve T620 and Contabo live infrastructure and current legacy chains, wallets, miners and balances. All initial RandomX changes are documentation/development only. Continue any remaining emergency-repair verification independently; it is not waived by a changed modernisation priority.
+
+**Implementation order:** shared RandomX engine source/test qualification → experimental TAO adapter and pre-/post-activation replay → resume TAO CP66 networking and end-to-end qualification → independent ERA/ZUS/HOPE adoption → XNUVA bit-for-bit modular refactor, each gated separately. The precise sequence after TAO may be reprioritised for maintenance needs but no release gates may be skipped.
+
+**Evidence status (21 November 2026):** policy **APPROVED BY OPERATOR**; shared foundation repository and design documents **OBSERVED**; complete independent shared-engine testing, TAO integration, per-coin fork specification and any live activation **UNVERIFIED / NOT AUTHORISED**.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -702,9 +725,10 @@ documentation update.
 | 1.3 (draft) | 19 November 2026 | Add P0/P1 emergency repair classification, fast-track testing, provisional rollout, recovery and rollback controls | Operator-agreed policy; CP51X failures unresolved; draft PR #1 pending review |
 | 1.4 (draft) | 19 November 2026 | Add mandatory Safe Wallet Discovery, Upgrade and Recovery Protocol; prevent silent empty-wallet substitution; require verified backups, explicit wallet selection and balance/history continuity | XNUVA fresh-install incident and operator-supplied recovery screenshot/log; wallet-discovery and release regression requirements added; implementation qualification remains outstanding |
 | 1.5 (draft) | 20 November 2026 | Record Contabo VPS 2 TAO/ZUS/HOPE operational evidence, legacy Boost build compatibility, wallet-disabled Zeus build limitations and deferred source-repair qualification | Operator-supplied checkpoints 28–52; nodes enabled/active, ZUS/HOPE still synchronising; upstream repairs and full qualification outstanding |
+| 1.6 (draft) | 21 November 2026 | RandomX-first modular PoW policy for TAO, ERA, ZUS, HOPE and XNUVA; forward-only consensus controls and shared-engine verification gates | Operator-approved sequencing; experimental shared engine exists, integration and deployment not qualified |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.5 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.6 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
