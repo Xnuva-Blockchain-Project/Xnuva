@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.11 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.12 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -795,6 +795,17 @@ documentation update.
 
 **Current TaoX release status:** BLOCKED pending rebuilt candidate, 637-block replay, compiled integer chainwork and UTXO/accounting equality, restart/reindex, negative tests and independent real-network qualification. No production or consensus activation changes are authorised.
 
+### CP137J-AD–AI — verified historical replay, restart and GitHub preservation (22 November 2026)
+
+**Evidence status: ISOLATED FIX VERIFIED for the 637-block fixture and subsequent restart; NOT production-qualified.** Operator-supplied terminal output supplies the following evidence:
+
+- **CP137J-AD:** Both isolated `src/node/blockstorage.cpp` PoW corrections compiled successfully (4/4 build steps). New preserved binary SHA-256: `68c0b082001369426862894d311354737c814e0579a14d402dc4df28b1954e90`. The prior startup-only executable remains preserved separately.
+- **CP137J-AE:** Fresh isolated replay using that binary and the previously pinned `tao-history.dat` SHA-256 `2e23e5b9491e43f13b61146287cfad50e5edf8a867ae5dd4d1687ec9cfcc10c6` returned exit 0; 637 `UpdateTip` records (heights 0–636), genesis `41de2a4b7018115eae4a3e7e82189b551aaf871af66929fa28a49ee852abb67e`, final block ID `7e235df054e299f729ef32e136fe0acc198aa792422fd24bc0309ecbc4847c88`, total logged transactions 637, `log2_work=32.663260` (rounded display only), and `Shutdown done`. An absent fresh mempool file was nonfatal.
+- **CP137J-AF:** Restarted the same disposable chainstate/index **without `-loadblock`**; exit 0, `CBlockFileInfo(blocks=637, size=118908, heights=0...636)`, `block tree size = 637`, exact prior best-chain hash at height 636, `Done loading` and `Shutdown done`. This specifically exercises the corrected block-index loading PoW path.
+- **CP137J-AH/AI:** Original upstream foundation files matched the saved prepatch originals; two exact reviewed repairs were added to `migration/modern-tao-draft/src/init.cpp` and `migration/modern-tao-draft/src/node/blockstorage.cpp`. Local Git commit `b6fc94559786fb71999df58e8aeea41258fef7cd`, branch `modernisation/taox-randomx`, repo `Xnuva-Blockchain-Project/Tao` was pushed and the remote SHA matched; clean working tree. Commit adds two full upstream-derived files (3,710 insertions), requiring careful reconciliation on future upstream upgrades.
+- **Cross-coin regression gate:** For ERA, ZUS, HOPE and XNUVA, audit *both* clean import and **restart/index recovery** PoW verification, using each coin's genuine identity hash and its consensus-specific PoW function; for ZUS also cover PoS/stake-specific validation. Verify mainnet-only startup option registration where relevant. Avoid blindly adopting TaoX Scrypt checks for other coins or an eventual RandomX transition.
+- **Still open:** independent compiled integer chainwork equality, full UTXO-set and monetary/accounting equality, invalid-block/reorg tests, algorithm/context selection for any prospective RandomX activation, P2P independent acceptance, wallets/maturity, and sustained operation. Neither successful historical fixture replay nor this source commit authorises release or production deployment.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -811,9 +822,10 @@ documentation update.
 | 1.9 (draft) | 21 November 2026 | TaoX CP129–132 verified 637-record historical import, restart and independent baseline comparison; scope and release gaps; 50% development milestone | Operator-supplied logs; no production changes or RandomX activation |
 | 1.10 (draft) | 22 November 2026 | TaoX CP133B preservation, CP137I integer-chainwork mathematical comparison, CP137J-M/N reproducible isolated daemon build, and CP137J-Q–U mainnet-only startup compatibility failure/guarded patch lesson | Operator-supplied checkpoints; reconstructed daemon replay blocked at startup; no production change, repair qualification or RandomX activation |
 | 1.11 (draft) | 22 November 2026 | Introduce mandatory cross-coin obstacle-to-standard learning protocol; record TaoX CP137J-V–AC startup smoke and storage PoW-boundary discovery, while preserving unresolved repair status | Operator-agreed policy and supplied checkpoints; isolated block-storage patch not yet compiled or replay-qualified |
+| 1.12 (draft) | 22 November 2026 | Record TaoX CP137J-AD–AI rebuilt candidate, successful 637-block replay and no-reimport restart, and pushed experimental-source repairs | Operator-supplied logs and exact GitHub commit; isolated verification only, full release gates remain open |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.11 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.12 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
