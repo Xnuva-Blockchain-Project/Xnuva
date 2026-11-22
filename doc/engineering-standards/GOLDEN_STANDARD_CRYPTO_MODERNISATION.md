@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.13 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.14 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -812,6 +812,16 @@ documentation update.
 
 **Cross-coin lesson:** isolate inherited legacy RPC code and database iterators, verify clean import and restart before intensive statistics RPC, gather a qualified backtrace or controlled evidence before patching, and do not infer monetary disagreement from a crashed comparison. Treat matching heights/hashes and accounting equivalence as separate gates; old and modern UTXO serialization hashes need not match. Maintain strict wallet and production isolation. The modern TaoX 636-output / 31,800 TAO snapshot is unchanged, but independent legacy UTXO equivalence is still pending.
 
+### TaoX CP137J-AU–BA — confirmed legacy unsafe UTXO dereference; modern regression gate (22 November 2026)
+
+**CONFIRMED legacy defect / mechanism; specific missing-state trigger not established.** GDB on the checksum-pinned packaged Revival executable captured `SIGSEGV` in `CCoinsViewDB::GetStats` at `txdb.cpp:119`, invoked from `gettxoutsetinfo` at `rpcblockchain.cpp:197`. The faulting expression is `stats.hashBlock = GetBestBlock()->GetBlockHash();`. In the exact corresponding legacy sources, `CCoinsViewDB::GetBestBlock()` may return `NULL` if the chainstate LevelDB key `'B'` is absent or its hash is not found in `mapBlockIndex`; `GetStats` does not check the returned pointer. Its second `GetBestBlock()->nHeight` dereference also lacks a guard. This is a confirmed *unsafe dereference path consistent with the observed crash*. The pointer value and precise reason for absence were not captured, so the specific trigger remains a hypothesis. The legacy node imported 636 blocks after genesis and reported matching height 636/genesis/tip; chainstate files appeared unusually small and the code allows deferred `pcoinsTip->Flush()` during initial download, but no direct database-key inspection or runtime null-pointer measurement was made.
+
+**Operator decision:** STOP legacy bug repair and unnecessary legacy restart investigation. Preserve live chain, backups, and data; pursue fixes and testing only in the modernised TaoX candidate.
+
+**MANDATORY MODERN-TAOX REGRESSION GATE (OPEN):** Verify the modern Bitcoin Core 31.1-derived `gettxoutsetinfo` and UTXO/chainstate snapshot path is independent of the legacy `GetBestBlock()->...` failure mechanism; audit for unchecked nullable pointers, missing best-block references, chainstate unavailable/not-ready errors, and flush/restart ordering. Add an isolated, deterministic negative test that requests statistics when chainstate is unavailable/incomplete and verifies a controlled error or safe handling rather than a crash; also verify normal `gettxoutsetinfo` after historical replay, restart and a fully persisted snapshot. The observed prior modern response (height 636, 636 UTXOs, 636 transactions, 31,800 TAO) proves only the tested healthy-state path—not absence of the legacy bug under adverse state. Do not mark gate PASS without source audit plus executable regression evidence. Retain the independent legacy UTXO-equivalence limitation.
+
+**Cross-coin regression:** carry the same null-pointer, chainstate readiness and persisted-snapshot guards into ERA, ZUS (including PoS accounting), HOPE and XNUVA modernisations without blindly porting legacy storage logic. No mainnet activation, wallet impact, or consensus policy change is authorised.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -830,9 +840,10 @@ documentation update.
 | 1.11 (draft) | 22 November 2026 | Introduce mandatory cross-coin obstacle-to-standard learning protocol; record TaoX CP137J-V–AC startup smoke and storage PoW-boundary discovery, while preserving unresolved repair status | Operator-agreed policy and supplied checkpoints; isolated block-storage patch not yet compiled or replay-qualified |
 | 1.12 (draft) | 22 November 2026 | Record TaoX CP137J-AD–AI rebuilt candidate, successful 637-block replay and no-reimport restart, and pushed experimental-source repairs | Operator-supplied logs and exact GitHub commit; isolated verification only, full release gates remain open |
 | 1.13 (draft) | 22 November 2026 | Record successful modern exact-chainwork and UTXO snapshot qualification followed by isolated legacy v1.0.0 UTXO RPC segmentation fault; require crash evidence before repair | Operator-supplied CP137J-AK–AS logs; legacy ledger equality remains blocked and crash root cause unconfirmed |
+| 1.14 (draft) | 22 November 2026 | Confirm GDB legacy GetStats unsafe nullable best-block dereference, defer legacy repair and mandate source + negative executable regression qualification in modern TaoX and other coins | Operator CP137J-AU–BA; precise absent-record trigger not proven; modern negative gate OPEN |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.13 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.14 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
