@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.12 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.13 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -806,6 +806,12 @@ documentation update.
 - **Cross-coin regression gate:** For ERA, ZUS, HOPE and XNUVA, audit *both* clean import and **restart/index recovery** PoW verification, using each coin's genuine identity hash and its consensus-specific PoW function; for ZUS also cover PoS/stake-specific validation. Verify mainnet-only startup option registration where relevant. Avoid blindly adopting TaoX Scrypt checks for other coins or an eventual RandomX transition.
 - **Still open:** independent compiled integer chainwork equality, full UTXO-set and monetary/accounting equality, invalid-block/reorg tests, algorithm/context selection for any prospective RandomX activation, P2P independent acceptance, wallets/maturity, and sustained operation. Neither successful historical fixture replay nor this source commit authorises release or production deployment.
 
+### TaoX CP137J-AR–AS — legacy RPC crash during UTXO qualification (22 November 2026)
+
+**OBSERVED FAILURE — root cause UNCONFIRMED; legacy accounting comparison BLOCKED.** A SHA-256-pinned packaged TAO Revival v1.0.0 `taocoind` (`d2727e9e54c5237146b246b5ec9f1eb978b52586b32032d7bb3155e952158d60`) ran in a fresh disposable data directory and user/network namespace, without a wallet, peer connections or mining, and imported the pinned historical fixture. Its RPC returned correct genesis and tip at height 636; the debug log reports `Loaded 636 blocks from external file in 674ms` (genesis was already present). During or near a subsequent `gettxoutsetinfo` request, the HTTP connection closed without a response and the process exited `-11` (SIGSEGV). The log ends near `ThreadRPCServer`; no core file was found in the test lab. This does **not** yet prove the crash occurred inside `CCoinsViewDB::GetStats()` or that the legacy UTXO contents differ from the modern snapshot.
+
+**Cross-coin lesson:** isolate inherited legacy RPC code and database iterators, verify clean import and restart before intensive statistics RPC, gather a qualified backtrace or controlled evidence before patching, and do not infer monetary disagreement from a crashed comparison. Treat matching heights/hashes and accounting equivalence as separate gates; old and modern UTXO serialization hashes need not match. Maintain strict wallet and production isolation. The modern TaoX 636-output / 31,800 TAO snapshot is unchanged, but independent legacy UTXO equivalence is still pending.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -823,9 +829,10 @@ documentation update.
 | 1.10 (draft) | 22 November 2026 | TaoX CP133B preservation, CP137I integer-chainwork mathematical comparison, CP137J-M/N reproducible isolated daemon build, and CP137J-Q–U mainnet-only startup compatibility failure/guarded patch lesson | Operator-supplied checkpoints; reconstructed daemon replay blocked at startup; no production change, repair qualification or RandomX activation |
 | 1.11 (draft) | 22 November 2026 | Introduce mandatory cross-coin obstacle-to-standard learning protocol; record TaoX CP137J-V–AC startup smoke and storage PoW-boundary discovery, while preserving unresolved repair status | Operator-agreed policy and supplied checkpoints; isolated block-storage patch not yet compiled or replay-qualified |
 | 1.12 (draft) | 22 November 2026 | Record TaoX CP137J-AD–AI rebuilt candidate, successful 637-block replay and no-reimport restart, and pushed experimental-source repairs | Operator-supplied logs and exact GitHub commit; isolated verification only, full release gates remain open |
+| 1.13 (draft) | 22 November 2026 | Record successful modern exact-chainwork and UTXO snapshot qualification followed by isolated legacy v1.0.0 UTXO RPC segmentation fault; require crash evidence before repair | Operator-supplied CP137J-AK–AS logs; legacy ledger equality remains blocked and crash root cause unconfirmed |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.12 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.13 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
