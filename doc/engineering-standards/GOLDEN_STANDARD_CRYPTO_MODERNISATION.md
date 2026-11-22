@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.10 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.11 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -775,6 +775,26 @@ documentation update.
 - **Mandatory compatibility rule for all five-coin modernisations:** when retaining a restricted set of supported networks, audit **argument-registration/help-text construction as well as runtime chain selection**. Do not instantiate unsupported network parameter objects merely to format help/defaults. Produce a narrowly scoped, human-reviewable patch that preserves authoritative network identities, ports, genesis and consensus; check every affected option for truthful defaults; retain explicit rejection of unsupported networks; do not replace them with fabricated values or dummy network parameters.
 - **Pending gates:** review exact `init.cpp` uses; prepare and inspect complete minimal patch in isolated workspace only; build new candidate and fingerprint it; confirm unsupported networks are still rejected; verify clean isolated mainnet-parameter startup and 637-block historical replay, exact compiled-client chainwork, UTXO/subsidy accounting, restart/reorg and negative tests. Keep production nodes untouched. No mainnet RandomX activation or release permission.
 
+## 16.9 Cross-coin obstacle-to-standard protocol (22 November 2026)
+
+**Standing procedure — operator-approved for all five coins (ERA, ZUS, HOPE, TAO/TaoX and XNUVA):** Every substantive development obstacle, unexpected failure or compatibility defect must trigger a short, traceable GSH lesson **at discovery**, then an evidence-based revision **after a fix is tested**. Do not wait for the entire coin modernisation to finish.
+
+1. **Record the obstacle immediately:** date, coin, checkpoint, impacted source/runtime boundary, pinned commit and binary/fixture fingerprint where relevant, exact error or observed result, reproduction/isolation conditions, affected release gate, and whether production was touched. Remove secrets and private infrastructure details before publishing.
+2. **Distinguish fact from hypothesis:** label `OBSERVED FAILURE`, `SUSPECTED CAUSE`, `ROOT CAUSE CONFIRMED`, `PATCH APPLIED / UNVERIFIED`, `FIX VERIFIED IN ISOLATION`, and `END-TO-END QUALIFIED` separately. A clean build, help output, or one passing fixture never upgrades an untested repair to release-ready.
+3. **Extract a reusable check:** explain which assumptions from an inherited codebase, legacy chain, wallet, build system, peer protocol or external integration failed; state the static audit, negative test or regression gate that would detect the same failure sooner in another coin.
+4. **Apply the lesson deliberately to the other coins:** mark each as `APPLICABLE / NOT APPLICABLE / TO AUDIT` with reason; account for different chains and economics (including ZUS dual PoW/PoS). Do not copy coin-specific consensus, monetary policy, identities, activation heights or network parameters into another coin.
+5. **Fix in isolation and preserve evidence:** review the smallest source diff, rebuild with traceable toolchain/flags, fingerprint the new binary, repeat the failing test, add a negative control, verify restart/recovery where relevant, and retain failed candidates/logs. Protect production networks, history and wallets.
+6. **Close the learning loop:** once verified, append the result and commit/reference to this GSH entry; add an actionable checklist or test to the recipient coin's modernisation plan; record still-open gates. If disproven, correct the diagnosis rather than deleting the original observation. The handbook remains a living engineering standard with traceable commits.
+
+**Immediate TaoX example (CP137J-V–AC, 22 November 2026):**
+
+- The isolated `src/init.cpp` repair removed unsupported-network object construction from `SetupServerArgs()` and corrected seven help/default descriptions. CP137J-W compiled a replacement binary, SHA-256 `46b5d9ba8ef6d8a8d7d723e4ec7d2585a1f4beabc5741c35c877c69891732169`. CP137J-X/Y verified help exits normally and unsupported testnet/testnet4/signet/regtest arguments are rejected with exit code 1; full mainnet node startup was **not yet qualified** by these smoke tests.
+- CP137J-Z subsequently entered isolated block import but failed at the first historical block (zero `UpdateTip`, log: `Errors in block header ... while reading block`, forced exit code 137). The fixture framing and SHA-256 were intact. CP137J-AA/AB located two inherited storage PoW checks in `src/node/blockstorage.cpp`: block-file reading and disk block-index loading were checking SHA256d block **identity** against the difficulty target, while historical TAO requires the Scrypt **PoW hash**. The separate `validation.cpp` path already selected historical Scrypt.
+- CP137J-AC applied **two isolated source edits** replacing the PoW input with `GetPoWHash()`, while retaining `GetHash()` for block identity/index comparison. **Status: PATCH APPLIED / UNVERIFIED.** There is no CP137J-AD compiled result, successful 637-block replay, restart result or source-branch commit in the evidence as of this entry.
+- **Portable audit requirement:** for **each** coin, enumerate every PoW/stake verification boundary, including block headers, block-file reads, index loads, reindex/restart, P2P validation, miners, historical replay and any future algorithm dispatcher. Verify identity hash versus consensus proof hash with coin-specific historical fixtures and failure-mode tests. For ZUS, explicitly audit PoS validation and staking rules as well as PoW. Future RandomX transitions must use deterministic, activation-gated algorithm selection; a hardwired historical Scrypt call is not a final hybrid-PoW solution.
+
+**Current TaoX release status:** BLOCKED pending rebuilt candidate, 637-block replay, compiled integer chainwork and UTXO/accounting equality, restart/reindex, negative tests and independent real-network qualification. No production or consensus activation changes are authorised.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -790,9 +810,10 @@ documentation update.
 | 1.8 (draft) | 21 November 2026 | Reusable modular RandomX integration lessons from TaoX CP102–128: full-node PoW boundaries, anti-DoS, context/seed gating, real compilation/linking, offline startup and replay evidence limits | Operator-supplied checkpoints; no mainnet RandomX activation or historical full-chain replay |
 | 1.9 (draft) | 21 November 2026 | TaoX CP129–132 verified 637-record historical import, restart and independent baseline comparison; scope and release gaps; 50% development milestone | Operator-supplied logs; no production changes or RandomX activation |
 | 1.10 (draft) | 22 November 2026 | TaoX CP133B preservation, CP137I integer-chainwork mathematical comparison, CP137J-M/N reproducible isolated daemon build, and CP137J-Q–U mainnet-only startup compatibility failure/guarded patch lesson | Operator-supplied checkpoints; reconstructed daemon replay blocked at startup; no production change, repair qualification or RandomX activation |
+| 1.11 (draft) | 22 November 2026 | Introduce mandatory cross-coin obstacle-to-standard learning protocol; record TaoX CP137J-V–AC startup smoke and storage PoW-boundary discovery, while preserving unresolved repair status | Operator-agreed policy and supplied checkpoints; isolated block-storage patch not yet compiled or replay-qualified |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.10 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.11 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
