@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.9 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.10 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -762,6 +762,19 @@ documentation update.
 
 **Outstanding release gates:** cryptographically precise chainwork equality, UTXO state and subsidy/accounting comparisons, invalid history and reorg scenarios, authenticated epoch seed selection, future RandomX difficulty/fork-choice rules, all PoW entry points in runtime/storage/P2P, block production and independent acceptance across transition, wallet/maturity and recovery, upgrade coordination, reproducible builds and long-running observation. Existing working chains and balances must be protected throughout.
 
+## 16.8 TaoX CP133B–137J-U — reproducible build and mainnet-only startup compatibility (22 November 2026)
+
+**Evidence status:** operator-supplied checkpoint outputs; documentation only, NOT a completed repair or release approval.
+
+- **CP133B preservation:** TaoX experimental `modernisation/taox-randomx` branch HEAD `52aa0be95c617ee86b094a9bc11f9326cbdc8e63` was committed and pushed; the former uncommitted `validation.cpp` dispatcher modification is now preserved. This supersedes the older CP132 resumption note claiming it remained uncommitted.
+- **Historical arithmetic:** CP137I independently computed the original TAO `floor(2^256/(target+1))` and modern `(~target/(target+1))+1` forms over a SHA-256-pinned 637-block historical replay fixture: 637/637 individual and cumulative integer-work matches across 230 `nBits` values, with final calculated chainwork `00000000000000000000000000000000000000000000000000000001956a8c3d`. This does **not** by itself verify internal exact chainwork equality of two compiled clients, complete UTXO equivalence, or live-network consensus.
+- **Build provenance:** 30-file experimental overlay (19 modified shared files, 11 new TAO-specific files), clean Bitcoin Core foundation commit `9be056a8a72b624dae9623b2f7bded92c2a21c91`. CP137J-M rebuilt an isolated wallet-disabled, GUI-disabled, self-test-disabled daemon, and CP137J-N preserved its binary at SHA-256 `798b95ced48704b56f8d9047f0aeef86db8609fe7009a9888f21568f358a9c55`. The older disposable CP125 executable was no longer available; this new build must be independently qualified.
+- **Isolation:** CP137J-P verified an unprivileged user/network namespace with only loopback DOWN. CP137J-Q ran the newly built binary in a separate namespace and disposable datadir but exited **134** before any `UpdateTip`; historical replay on this rebuilt candidate is **FAILED/BLOCKED**, not passed.
+- **Root cause of observed abort:** CP137J-R captured `std::runtime_error: TAO Revival migration draft: only authoritative mainnet is enabled`. CP137J-S/T traced it to inherited `SetupServerArgs()` in `src/init.cpp`, which **unconditionally constructs testnet, testnet4, signet and regtest base/chain parameter objects** for option help/default descriptions. TaoX's `CreateBaseChainParams()` and `CreateChainParams()` deliberately reject all non-mainnet chain types. As the constructors run during option registration, simply passing `-chain=main` cannot eliminate this startup exception.
+- **CP137J-U repair attempt:** a guarded, in-memory preparation step halted with `RuntimeError: Complex option description requires manual review at line 479; source not written`. It created a backup of the isolated laboratory's `init.cpp`, but **did not apply a source patch**; no repair, rebuild, successful restart or replay is evidenced.
+- **Mandatory compatibility rule for all five-coin modernisations:** when retaining a restricted set of supported networks, audit **argument-registration/help-text construction as well as runtime chain selection**. Do not instantiate unsupported network parameter objects merely to format help/defaults. Produce a narrowly scoped, human-reviewable patch that preserves authoritative network identities, ports, genesis and consensus; check every affected option for truthful defaults; retain explicit rejection of unsupported networks; do not replace them with fabricated values or dummy network parameters.
+- **Pending gates:** review exact `init.cpp` uses; prepare and inspect complete minimal patch in isolated workspace only; build new candidate and fingerprint it; confirm unsupported networks are still rejected; verify clean isolated mainnet-parameter startup and 637-block historical replay, exact compiled-client chainwork, UTXO/subsidy accounting, restart/reorg and negative tests. Keep production nodes untouched. No mainnet RandomX activation or release permission.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -776,9 +789,10 @@ documentation update.
 | 1.7 (draft) | 21 November 2026 | TaoX coin name and TAOX ticker, preserved TAO historical network, new experimental development branch and branding/consensus separation | Operator-approved naming; branch created and compared identical to existing RandomX experimental tip; no product code or live node changes |
 | 1.8 (draft) | 21 November 2026 | Reusable modular RandomX integration lessons from TaoX CP102–128: full-node PoW boundaries, anti-DoS, context/seed gating, real compilation/linking, offline startup and replay evidence limits | Operator-supplied checkpoints; no mainnet RandomX activation or historical full-chain replay |
 | 1.9 (draft) | 21 November 2026 | TaoX CP129–132 verified 637-record historical import, restart and independent baseline comparison; scope and release gaps; 50% development milestone | Operator-supplied logs; no production changes or RandomX activation |
+| 1.10 (draft) | 22 November 2026 | TaoX CP133B preservation, CP137I integer-chainwork mathematical comparison, CP137J-M/N reproducible isolated daemon build, and CP137J-Q–U mainnet-only startup compatibility failure/guarded patch lesson | Operator-supplied checkpoints; reconstructed daemon replay blocked at startup; no production change, repair qualification or RandomX activation |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.9 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.10 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
