@@ -4,7 +4,7 @@
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
 
-**Document ID:** GS-CM-001 \| Version: 1.14 (draft) \| Baseline: 18 November 2026
+**Document ID:** GS-CM-001 \| Version: 1.15 (draft) \| Baseline: 18 November 2026
 
 Applies to TAO Revival, XNUVA, ERA, ZUS, HOPE and every future core,
 miner, wallet, node, network or game-treasury modernisation.
@@ -822,6 +822,30 @@ documentation update.
 
 **Cross-coin regression:** carry the same null-pointer, chainstate readiness and persisted-snapshot guards into ERA, ZUS (including PoS accounting), HOPE and XNUVA modernisations without blindly porting legacy storage logic. No mainnet activation, wallet impact, or consensus policy change is authorised.
 
+## 16.10 TaoX CP25E–25X — RandomX P2P, wallet and recovery qualification (23 November 2026, draft)
+
+**Evidence classification:** operator-supplied checkpoint output and local qualification snapshot; scope is isolated experimental TaoX regtest, not public-network certification. Reconcile original logs, exact binary/toolchain and report artefacts before release sign-off. No live Tao network changes or mainnet RandomX activation were authorised.
+
+**Source and preservation:** `Xnuva-Blockchain-Project/Tao`, branch `modernisation/taox-consolidated-full-source`, committed HEAD `3eb33acd901cb28392258c168d87ee0e70261076`. Checkpoint 25X reports the branch successfully pushed and remote HEAD matched; three unrelated wallet source changes remained uncommitted and excluded from the push: `taox-core/src/wallet/rpc/addresses.cpp`, `taox-core/src/wallet/spend.cpp`, and `taox-core/src/wallet/wallet.h`. Never equate development-branch synchronisation with release or deployment.
+
+**Contextual PoW and replay (CP24T–25F):** operator checkpoints report historical Scrypt and experimental RandomX block reconstruction; ordinary and out-of-order block reindex; epoch boundary handling; and wrong-seed nonce-5 proof-of-work distinguishing test preserved as an offline regression fixture. A candidate valid under an incorrect seed and invalid under the authorised seed was rejected by contextual block validation. Treat source prechecks separately from contextual consensus checks; do not globally apply the legacy Scrypt-only header test to RandomX heights.
+
+**Genuine P2P evidence (CP25G–25N):** source tracing identified RandomX-aware connected-header, presync and redownload handlers; on a localhost two-node laboratory (G/H), a fresh receiver synchronised all 35 blocks through height 34 and matched the source hashes across the Scrypt/RandomX and seed-epoch boundaries. A separate isolated test peer sent a known wrong-seed header (`50855023878f6f50f9cec160a0090f2f70a9b18282d2c445b2e4db0d33192406`) in a real `headers` message; the receiver logged `header with invalid contextual proof of work`, did not index the header and retained its accepted chain. This qualifies the tested connected-parent rejection path **only**, not adversarial low-work presync/redownload, peer diversity, DoS resistance or internet deployment. The inherited functional-test Python network magic differed from TaoX experimental regtest; test-only adaptation was made in a disposable process, not production source.
+
+**Wallet and transaction evidence (CP25O–25U):** a preserved SQLite descriptor-wallet backup was restored into a fresh isolated node J on a reconstructed height-34 chain. Its 34 mining transactions and balances (700.00000000 trusted, 1000.00000000 immature) were recovered and survived a clean restart. A second disposable regtest wallet received a 1 TAOX signed payment drawn from mature coinbase funds, with an explicitly selected fee of 0.00000450 TAOX (225 vbytes at 2 sat/vB), transaction `861240eeb5a636bd899918e27909a5d6ee6deaba67985c2652a39d2700db002a`. An experimental RandomX block at height 35, hash `a41f9de0ac03b8f393faeb5ef937f097104c481070be3a706578898dc5a400ba`, included the transaction. Both wallets reported one confirmation. At height 35, sender trusted/immature balances were 748.99999550 / 950.00000000 TAOX, and receiver trusted/immature balances 1.00000000 / 50.00000450 TAOX; the latter coinbase includes the fee. A clean restart retained the block, payment and both balances. No claim is made about production wallet compatibility or untested transaction classes.
+
+**Local evidence preservation (CP25V–25W):** operator report of successful source, node, wallet, P2P and backup checks; a timestamped local-only qualification report has SHA-256 `a6ddc061be0481896719b113a3115a547d8a8739ba8def9047f2cdcc73aecd47`. The report is not embedded in this public handbook; preserve it and raw logs privately with access controls. The original regtest wallet backup was reported unchanged. Do not publish wallet key material, authentication secrets, or private operational configuration.
+
+**New reusable release-gate lessons:**
+- Test both positive *real P2P* sync and negative *real P2P* header rejection, checking logs **and** block-index absence; a static helper PASS alone is insufficient.
+- On mixed-algorithm chains, verify contextual seed derivation at every algorithm/epoch boundary and across network, import/reindex and restart pathways.
+- When using inherited Bitcoin test tools on a custom network, confirm chain-specific message magic before interpreting handshake failures; confine adaptation to the isolated test environment.
+- A backup's existence is not a recovery PASS: restore it independently, reconcile transactions and balances, spend mature funds, confirm the payment in a mined block and repeat shutdown/restart checks.
+- Regtest fee estimation without transaction history may fail when fallback fees are disabled; use an explicitly verified fee only for the isolated test, not a global production policy change.
+- Preserve reproducible checkpoint evidence, immutable source commit IDs, and a separate open-gates register; do not treat successful exploratory tests as automatic release approval.
+
+**OPEN / BLOCKING before first public release:** adversarial presync and redownload tests, review and testing of the three uncommitted wallet changes, historical live Tao chain/wallet compatibility and independent acceptance, clean build and full regression, sustained 24–48h monitored operation, release/rollback documentation, and separately authorised activation strategy if RandomX is ever proposed for mainnet. Experimental regtest activation does not authorise any mainnet activation.
+
 ## 16.7 Revision history
 
 | Version | Date | Reason and scope | Evidence / approval |
@@ -841,9 +865,10 @@ documentation update.
 | 1.12 (draft) | 22 November 2026 | Record TaoX CP137J-AD–AI rebuilt candidate, successful 637-block replay and no-reimport restart, and pushed experimental-source repairs | Operator-supplied logs and exact GitHub commit; isolated verification only, full release gates remain open |
 | 1.13 (draft) | 22 November 2026 | Record successful modern exact-chainwork and UTXO snapshot qualification followed by isolated legacy v1.0.0 UTXO RPC segmentation fault; require crash evidence before repair | Operator-supplied CP137J-AK–AS logs; legacy ledger equality remains blocked and crash root cause unconfirmed |
 | 1.14 (draft) | 22 November 2026 | Confirm GDB legacy GetStats unsafe nullable best-block dereference, defer legacy repair and mandate source + negative executable regression qualification in modern TaoX and other coins | Operator CP137J-AU–BA; precise absent-record trigger not proven; modern negative gate OPEN |
+| 1.15 (draft) | 23 November 2026 | Record TaoX CP25E–25X isolated contextual RandomX/P2P, wrong-seed rejection, independent wallet restoration, confirmed spending, restart persistence and GitHub development synchronisation; clarify remaining release blockers | Operator-supplied CP25 logs and local evidence report hash; public release and mainnet activation NOT approved |
 
 ## Standing rule: NO PASS without scope. NO RELEASE without evidence. NO LOSS OF HISTORY, KEYS OR FUNDS.
 
-Document ends — v1.14 draft, preserving the earlier baselines. Operational proof must be supplied by
+Document ends — v1.15 draft, preserving the earlier baselines. Operational proof must be supplied by
 live logs and independent nodes; a handbook cannot itself validate a
 running cryptocurrency.
