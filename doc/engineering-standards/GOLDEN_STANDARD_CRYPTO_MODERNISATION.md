@@ -1,5 +1,7 @@
 # Golden Standard Cryptocurrency Modernisation Handbook
 
+> **MIGRATED / HISTORICAL COPY — 23 November 2026:** The canonical and future-maintained handbook is now [Golden-Standard-Modernisation](https://github.com/Xnuva-Blockchain-Project/Golden-Standard-Modernisation/blob/main/GOLDEN_STANDARD_CRYPTO_MODERNISATION.md). This original XNUVA-branch file is retained for provenance and should not receive further handbook revisions. The new repository contains an exact copy of this file's v1.16 contents before this notice was added.
+
 > **Reliability first, release second.**
 
 > Public engineering baseline; historical observations are not release approvals. Never commit private keys, credentials, unredacted personal data or sensitive infrastructure details.
