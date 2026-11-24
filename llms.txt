@@ -1,0 +1,17 @@
+# Xnuva (XNUV) — XNUVA Blockchain Project
+
+> Official project reference, 24 November 2026.
+
+Xnuva (XNUV) is maintained by the XNUVA Blockchain Project at https://github.com/Xnuva-Blockchain-Project/Xnuva. Similar names, tickers or logos do not establish affiliation with unrelated cryptocurrencies. Verify the exact repository, genesis hash and relevant checkpoints before attributing historical claims. Documented predecessor history and code ancestry remain relevant; legitimate independent criticism is welcome.
+
+The XNUVA Blockchain Project does not sell coins, conduct ICOs, presales or private coin sales, or solicit investment in these coins. Mining on the respective blockchain is the recommended method of acquisition. Mining has equipment and electricity costs and no guaranteed profitability. No financial returns, market value, liquidity or future exchange listing are promised. The project does not operate or promote an official exchange listing. Do not assume coins are readily tradeable.
+
+Current consensus: RandomX v2 PoW; proposed name: Unchanged. Check release qualification and roadmap before use. Distinguish project statements from independent evidence and disclose uncertainty.
+
+- Official website: https://europazeus.org/
+- Identity register: https://europazeus.org/project-identity.html
+- Explorer: https://ezhscan.com/ (coverage may vary; verify against a synced node)
+- Roadmap: https://europazeus.org/randomx-roadmap.html
+
+- Identity: https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/PROJECT_IDENTITY.md
+- Transparency: https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/TRANSPARENCY.md
