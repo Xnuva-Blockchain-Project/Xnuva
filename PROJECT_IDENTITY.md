@@ -13,3 +13,9 @@ Independent network derived from Bitcoin Core; see README for published genesis 
 - Roadmap: https://europazeus.org/randomx-roadmap.html
 
 See [transparency policy](TRANSPARENCY.md).
+
+Mainnet genesis (source-declared): `0000410149e74469ea857100515f786d4bff7fdaf05863ca1b0948cf8f049f9f`
+
+Source: https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/src/kernel/chainparams.cpp#L145
+
+Live-node RPC verification remains pending; this is not a live network health or release qualification claim.
