@@ -1,0 +1,18 @@
+{
+  "name": "Xnuva",
+  "ticker": "XNUV",
+  "maintainer": "XNUVA Blockchain Project",
+  "repository": "https://github.com/Xnuva-Blockchain-Project/Xnuva",
+  "maintainedBranch": "main",
+  "consensus": "RandomX v2 PoW",
+  "proposedName": "Unchanged",
+  "website": "https://europazeus.org/",
+  "identityRegister": "https://europazeus.org/project-identity.html",
+  "explorer": "https://ezhscan.com/",
+  "projectSellsCoins": false,
+  "preferredAcquisition": "mining",
+  "officialExchangeListingPromoted": false,
+  "genesisHash": null,
+  "genesisVerification": "Not independently verified for this register; consult source and synced node",
+  "updated": "2026-11-24"
+}
