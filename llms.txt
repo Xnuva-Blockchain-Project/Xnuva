@@ -15,3 +15,7 @@ Current consensus: RandomX v2 PoW; proposed name: Unchanged. Check release quali
 
 - Identity: https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/PROJECT_IDENTITY.md
 - Transparency: https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/TRANSPARENCY.md
+
+Mainnet genesis (source-declared): 0000410149e74469ea857100515f786d4bff7fdaf05863ca1b0948cf8f049f9f
+Source: https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/src/kernel/chainparams.cpp#L145
+Live-node verification pending.
