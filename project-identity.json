@@ -12,7 +12,10 @@
   "projectSellsCoins": false,
   "preferredAcquisition": "mining",
   "officialExchangeListingPromoted": false,
-  "genesisHash": null,
-  "genesisVerification": "Not independently verified for this register; consult source and synced node",
-  "updated": "2026-11-24"
+  "genesisHash": "0000410149e74469ea857100515f786d4bff7fdaf05863ca1b0948cf8f049f9f",
+  "genesisVerification": "Matched maintained mainnet source declaration; live-node RPC verification pending",
+  "updated": "2026-11-24",
+  "genesisSource": "https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/src/kernel/chainparams.cpp#L145",
+  "block1Hash": "c1430034fe105fae719ae896847b26a95b3e896973502ff1cdc5efaac93988a2",
+  "block1Verification": "Published README launch checkpoint; live verification pending"
 }
