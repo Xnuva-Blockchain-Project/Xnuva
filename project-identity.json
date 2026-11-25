@@ -5,7 +5,7 @@
   "repository": "https://github.com/Xnuva-Blockchain-Project/Xnuva",
   "maintainedBranch": "main",
   "consensus": "RandomX v2 PoW",
-  "proposedName": "Unchanged",
+  "proposedName": "Duprezo (DPZE)",
   "website": "https://europazeus.org/",
   "identityRegister": "https://europazeus.org/project-identity.html",
   "explorer": "https://ezhscan.com/",
@@ -14,8 +14,12 @@
   "officialExchangeListingPromoted": false,
   "genesisHash": "0000410149e74469ea857100515f786d4bff7fdaf05863ca1b0948cf8f049f9f",
   "genesisVerification": "Matched maintained mainnet source declaration; live-node RPC verification pending",
-  "updated": "2026-11-24",
+  "updated": "2026-11-25",
   "genesisSource": "https://github.com/Xnuva-Blockchain-Project/Xnuva/blob/main/src/kernel/chainparams.cpp#L145",
   "block1Hash": "c1430034fe105fae719ae896847b26a95b3e896973502ff1cdc5efaac93988a2",
-  "block1Verification": "Published README launch checkpoint; live verification pending"
+  "block1Verification": "Published README launch checkpoint; live verification pending",
+  "previousBrandingProposal": "Unchanged",
+  "proposedTicker": "DPZE",
+  "romanHeritage": "Dupondius",
+  "brandingStatus": "Selected future public identity; not activated; formal clearance pending"
 }
